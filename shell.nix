@@ -15,13 +15,13 @@ let
       eigen
       libGL
       libepoxy
-      xorg.libX11
-      xorg.libXcursor
-      xorg.libXext
-      xorg.libXfixes
-      xorg.libXi
-      xorg.libXinerama
-      xorg.libXrandr
+      libx11
+      libxcursor
+      libxext
+      libxfixes
+      libxi
+      libxinerama
+      libxrandr
     ];
 
     cmakeFlags = [
@@ -55,17 +55,18 @@ pkgs.mkShell {
     unzip
     wget
     wayland
-    xorg.libX11
-    xorg.libXcursor
-    xorg.libXext
-    xorg.libXfixes
-    xorg.libXi
-    xorg.libXinerama
-    xorg.libXrandr
+    libx11
+    libxcursor
+    libxext
+    libxfixes
+    libxi
+    libxinerama
+    libxrandr
   ];
 
   shellHook = ''
     export ORB_SLAM3_ROOT="$(pwd)"
     export CMAKE_BUILD_PARALLEL_LEVEL="''${CMAKE_BUILD_PARALLEL_LEVEL:-$(nproc)}"
+    export CMAKE_POLICY_VERSION_MINIMUM=3.5
   '';
 }
