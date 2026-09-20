@@ -1,9 +1,8 @@
 {
   "name": "ORB-SLAM3",
-  "build": {
-    "dockerfile": "docker/Dockerfile",
-    "context": ".."
-  },
+  "image": "ghcr.io/nayetdet/orb_slam3:devcontainer",
+  "workspaceMount": "source=${localWorkspaceFolder},target=${localWorkspaceFolder},type=bind",
+  "workspaceFolder": "${localWorkspaceFolder}",
   "remoteUser": "root",
   "overrideCommand": false,
   "containerEnv": {

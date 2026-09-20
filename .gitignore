@@ -10,7 +10,9 @@
 # Devcontainer
 !.devcontainer/
 !.devcontainer/docker/
-!.devcontainer/docker/*
+!.devcontainer/docker/**
+!.devcontainer/build/
+!.devcontainer/build/**
 
 CMakeLists.txt.user
 CMakeLists_modified.txt
@@ -94,5 +96,9 @@ Table_TUMVI_rooms/
 my_settings.txt
 
 borrar/*
+
+# The published Dev Container build definition must be versioned.
+!.devcontainer/build/
+!.devcontainer/build/**
 
 */ExecMean.txt

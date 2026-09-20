@@ -1,0 +1,9 @@
+{
+  "name": "ORB-SLAM3-build",
+  "build": {
+    "dockerfile": "../docker/Dockerfile",
+    "context": "../.."
+  },
+  "remoteUser": "root",
+  "overrideCommand": false
+}
