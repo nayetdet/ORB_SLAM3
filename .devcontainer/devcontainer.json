@@ -3,8 +3,13 @@
   "image": "ghcr.io/nayetdet/orb_slam3:devcontainer",
   "workspaceMount": "source=${localWorkspaceFolder},target=${localWorkspaceFolder},type=bind",
   "workspaceFolder": "${localWorkspaceFolder}",
+  "initializeCommand": "bash .devcontainer/scripts/init.sh",
+  "postCreateCommand": "bash .devcontainer/scripts/post-create.sh",
   "remoteUser": "root",
   "overrideCommand": false,
+  "remoteEnv": {
+    "PATH": "${containerEnv:PATH}:/root/.bun/bin"
+  },
   "containerEnv": {
     "DISPLAY": "${localEnv:DISPLAY}",
     "XAUTHORITY": "/tmp/.Xauthority",

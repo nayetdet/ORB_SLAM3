@@ -4,6 +4,16 @@
     "dockerfile": "../docker/Dockerfile",
     "context": "../.."
   },
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": true,
+      "username": "root"
+    },
+    "ghcr.io/devcontainers-extra/features/bun:1": {
+      "version": "1.3.14"
+    }
+  },
   "remoteUser": "root",
   "overrideCommand": false
 }
