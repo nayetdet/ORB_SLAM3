@@ -8,12 +8,13 @@
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": true,
       "configureZshAsDefaultShell": true,
-      "username": "root"
+      "installOhMyZsh": true,
+      "username": "vscode"
     },
     "ghcr.io/devcontainers-extra/features/bun:1": {
       "version": "1.3.14"
     }
   },
-  "remoteUser": "root",
+  "remoteUser": "vscode",
   "overrideCommand": false
 }

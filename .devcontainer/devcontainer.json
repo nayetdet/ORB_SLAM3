@@ -5,10 +5,10 @@
   "workspaceFolder": "${localWorkspaceFolder}",
   "initializeCommand": "bash .devcontainer/scripts/init.sh",
   "postCreateCommand": "bash .devcontainer/scripts/post-create.sh",
-  "remoteUser": "root",
+  "remoteUser": "vscode",
   "overrideCommand": false,
   "remoteEnv": {
-    "PATH": "${containerEnv:PATH}:/root/.bun/bin"
+    "PATH": "${containerEnv:PATH}:/home/vscode/.bun/bin"
   },
   "containerEnv": {
     "DISPLAY": "${localEnv:DISPLAY}",

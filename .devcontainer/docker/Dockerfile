@@ -1,10 +1,12 @@
-FROM debian:trixie
+FROM mcr.microsoft.com/devcontainers/base:trixie
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     ORB_SLAM3_ROOT=/workspaces/ORB_SLAM3 \
     CMAKE_POLICY_VERSION_MINIMUM=3.5
+
+USER root
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -14,8 +16,10 @@ RUN apt-get update \
         pkg-config \
         git \
         ca-certificates \
+        curl \
         wget \
         unzip \
+        zsh \
         python3 \
         python3-numpy \
         python3-matplotlib \
@@ -86,3 +90,5 @@ RUN git clone --branch v2.56.5 --depth 1 \
     && rm -rf /tmp/librealsense
 
 WORKDIR /workspaces/ORB_SLAM3
+
+USER vscode
