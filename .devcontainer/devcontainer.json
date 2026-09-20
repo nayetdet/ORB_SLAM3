@@ -1,0 +1,36 @@
+{
+  "name": "ORB-SLAM3",
+  "build": {
+    "dockerfile": "docker/Dockerfile",
+    "context": ".."
+  },
+  "remoteUser": "root",
+  "overrideCommand": false,
+  "containerEnv": {
+    "DISPLAY": "${localEnv:DISPLAY}",
+    "XAUTHORITY": "/tmp/.Xauthority",
+    "QT_X11_NO_MITSHM": "1"
+  },
+  "runArgs": [
+    "--init",
+    "--device=/dev/bus/usb:/dev/bus/usb"
+  ],
+  "mounts": [
+    "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.Xauthority,target=/tmp/.Xauthority,type=bind,consistency=cached"
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools-extension-pack",
+        "ms-vscode.cmake-tools",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-azuretools.vscode-docker",
+        "eamodio.gitlens",
+        "usernamehw.errorlens",
+        "streetsidesoftware.code-spell-checker"
+      ]
+    }
+  }
+}

@@ -7,6 +7,11 @@
 # Unignore all dirs
 !*/
 
+# Devcontainer
+!.devcontainer/
+!.devcontainer/docker/
+!.devcontainer/docker/*
+
 CMakeLists.txt.user
 CMakeLists_modified.txt
 
