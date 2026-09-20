@@ -72,6 +72,7 @@ RUN git clone --branch v2.56.5 --depth 1 \
         -DCMAKE_INSTALL_PREFIX=/usr/local \
         -DBUILD_EXAMPLES=OFF \
         -DBUILD_GRAPHICAL_EXAMPLES=OFF \
+        -DBUILD_TOOLS=OFF \
         -DBUILD_PYTHON_BINDINGS=OFF \
         -DBUILD_UNIT_TESTS=OFF \
         -DFORCE_RSUSB_BACKEND=ON \
