@@ -38,7 +38,7 @@ jobs:
         uses: devcontainers/ci@v0.3
         with:
           configFile: .devcontainer/build/devcontainer.json
-          imageName: ${{ env.REGISTRY }}/${{ github.repository }}
+          imageName: ${{ env.REGISTRY }}/nayetdet/orb_slam3
           imageTag: devcontainer
-          cacheFrom: ${{ env.REGISTRY }}/${{ github.repository }}:devcontainer
+          cacheFrom: ${{ env.REGISTRY }}/nayetdet/orb_slam3:devcontainer
           push: always
