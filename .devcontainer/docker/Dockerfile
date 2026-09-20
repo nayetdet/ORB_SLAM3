@@ -24,6 +24,7 @@ RUN apt-get update \
         clang \
         clangd \
         clang-format \
+        lld \
         openssl \
         libssl-dev \
         libboost-all-dev \
@@ -76,6 +77,10 @@ RUN git clone --branch v2.56.5 --depth 1 \
         -DBUILD_PYTHON_BINDINGS=OFF \
         -DBUILD_UNIT_TESTS=OFF \
         -DFORCE_RSUSB_BACKEND=ON \
+        -DCMAKE_C_COMPILER=clang \
+        -DCMAKE_CXX_COMPILER=clang++ \
+        -DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=lld \
+        -DCMAKE_MODULE_LINKER_FLAGS=-fuse-ld=lld \
     && cmake --build /tmp/librealsense/build --parallel \
     && cmake --install /tmp/librealsense/build \
     && rm -rf /tmp/librealsense
