@@ -223,7 +223,12 @@ protected:
     bool mbFixScale;
 
 
-    bool mnFullBAIdx;
+    // Generation counter for Global BA runs: RunGlobalBundleAdjustment snapshots
+    // it and re-checks it to notice that a newer loop aborted its optimisation.
+    // It was declared bool upstream, which saturates at true on the first
+    // increment, so any abort after the first went undetected. C++17 also
+    // forbids ++ on bool, which is how this surfaced.
+    int mnFullBAIdx;
 
 
 

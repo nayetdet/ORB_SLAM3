@@ -1,70 +1,38 @@
 %YAML:1.0
 
 #--------------------------------------------------------------------------------------------
-# System config
-#--------------------------------------------------------------------------------------------
-
-# When the variables are commented, the system doesn't load a previous session or not store the current one
-
-# If the LoadFile doesn't exist, the system give a message and create a new Atlas from scratch
-#System.LoadAtlasFromFile: "Session_MH01_MH02_MH03_Stereo60_Pseudo"
-
-# The store file is created from the current session, if a file with the same name exists it is deleted
-#System.SaveAtlasToFile: "Session_MH01_MH02_MH03_Stereo60_Pseudo"
-
-#--------------------------------------------------------------------------------------------
 # Camera Parameters. Adjust them!
 #--------------------------------------------------------------------------------------------
 File.version: "1.0"
 
-Camera.type: "PinHole"
+Camera.type: "Rectified"
 
 # Camera calibration and distortion parameters (OpenCV) 
-Camera1.fx: 458.654
-Camera1.fy: 457.296
-Camera1.cx: 367.215
-Camera1.cy: 248.375
+Camera1.fx: 718.856
+Camera1.fy: 718.856
+Camera1.cx: 607.1928
+Camera1.cy: 185.2157
 
-Camera1.k1: -0.28340811
-Camera1.k2: 0.07395907
-Camera1.p1: 0.00019359
-Camera1.p2: 1.76187114e-05
-
-Camera2.fx: 457.587
-Camera2.fy: 456.134
-Camera2.cx: 379.999
-Camera2.cy: 255.238
-
-Camera2.k1: -0.28368365
-Camera2.k2: 0.07451284
-Camera2.p1: -0.00010473
-Camera2.p2: -3.55590700e-05
-
-Camera.width: 752
-Camera.height: 480
+Camera.width: 1241
+Camera.height: 376
 
 # Camera frames per second 
-Camera.fps: 20
+Camera.fps: 10
+
+Stereo.b: 0.53716
 
 # Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
 Camera.RGB: 1
 
-Stereo.ThDepth: 60.0
-Stereo.T_c1_c2: !!opencv-matrix
-  rows: 4
-  cols: 4
-  dt: f
-  data: [0.999997256477797,-0.002317135723275,-0.000343393120620,0.110074137800478,
-         0.002312067192432,0.999898048507103,-0.014090668452683,-0.000156612054392,
-         0.000376008102320,0.014089835846691,0.999900662638081,0.000889382785432,
-         0,0,0,1.000000000000000]
+# Close/Far threshold. Baseline times.
+Stereo.ThDepth: 35.0
 
 #--------------------------------------------------------------------------------------------
 # ORB Parameters
 #--------------------------------------------------------------------------------------------
 
 # ORB Extractor: Number of features per image
-ORBextractor.nFeatures: 1200
+ORBextractor.nFeatures: 2000
 
 # ORB Extractor: Scale factor between levels in the scale pyramid 	
 ORBextractor.scaleFactor: 1.2
@@ -82,33 +50,35 @@ ORBextractor.minThFAST: 7
 #--------------------------------------------------------------------------------------------
 # Viewer Parameters
 #--------------------------------------------------------------------------------------------
-Viewer.KeyFrameSize: 0.05
-Viewer.KeyFrameLineWidth: 1.0
-Viewer.GraphLineWidth: 0.9
+Viewer.KeyFrameSize: 0.6
+Viewer.KeyFrameLineWidth: 2.0
+Viewer.GraphLineWidth: 1.0
 Viewer.PointSize: 2.0
-Viewer.CameraSize: 0.08
+Viewer.CameraSize: 0.7
 Viewer.CameraLineWidth: 3.0
 Viewer.ViewpointX: 0.0
-Viewer.ViewpointY: -0.7
-Viewer.ViewpointZ: -1.8
-Viewer.ViewpointF: 500.0
-Viewer.imageViewScale: 1.0
+Viewer.ViewpointY: -100
+Viewer.ViewpointZ: -0.1
+Viewer.ViewpointF: 2000.0
 
 
 #--------------------------------------------------------------------------------------------
-# Dense Reconstruction (Zhang 2023, ch. 3) -- optional, off by default.
+# Dense Reconstruction (Zhang 2023, ch. 3) -- ENABLED.
+# Generated from KITTI00-02.yaml; identical except Dense.enabled. Keeping the two as
+# separate files lets a benchmark run baseline and dense back to back
+# without editing anything between runs.
 # Set Dense.enabled to 1 to reproduce the thesis pipeline. With 0 the system is
 # bit-for-bit stock ORB-SLAM3 and the dense thread is never created.
 #--------------------------------------------------------------------------------------------
-Dense.enabled: 0
+Dense.enabled: 1
 
 # Voxel grid leaf size [m]. Sec. 3.2 removes "more than 90% of the voxels" here.
-Dense.resolution: 0.02
+Dense.resolution: 0.1
 
 # d_min / d_max of eq. (34): the depth range a point must fall in to be used,
 # and the range over which its confidence is interpolated.
-Dense.depthMin: 0.5
-Dense.depthMax: 10.0
+Dense.depthMin: 1.0
+Dense.depthMax: 40.0
 
 # Sec. 3.5: probabilistic merge. Turn on for multi-sequence runs; P_max is the
 # confidence at d_min (P_min = 1 - P_max). mergeDistance 0 means "use resolution".
@@ -122,14 +92,14 @@ Dense.loadCloud: ""
 
 # Octomap, sec. 3.4. Thesis 4.4: ~0.01 m indoors, >=0.05 m outdoors (0.2 typical).
 Dense.octomapEnabled: 1
-Dense.octomapResolution: 0.05
+Dense.octomapResolution: 0.2
 
 # Output: <saveDirectory>/<savePrefix>_cloud.pcd and _octomap.ot
 Dense.saveDirectory: "."
-Dense.savePrefix: "euroc"
+Dense.savePrefix: "kitti"
 
 # Stereo only (Algorithm 2). numDisparities must be divisible by 16, blockSize odd.
-Dense.sgbmNumDisparities: 96
+Dense.sgbmNumDisparities: 128
 Dense.sgbmBlockSize: 9
 # ROI margins (Algorithm 2 line 13), trimming the invalid rectification border.
 Dense.roiMarginX: 0

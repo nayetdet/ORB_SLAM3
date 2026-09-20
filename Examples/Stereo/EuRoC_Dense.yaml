@@ -96,11 +96,14 @@ Viewer.imageViewScale: 1.0
 
 
 #--------------------------------------------------------------------------------------------
-# Dense Reconstruction (Zhang 2023, ch. 3) -- optional, off by default.
+# Dense Reconstruction (Zhang 2023, ch. 3) -- ENABLED.
+# Generated from EuRoC.yaml; identical except Dense.enabled. Keeping the two as
+# separate files lets a benchmark run baseline and dense back to back
+# without editing anything between runs.
 # Set Dense.enabled to 1 to reproduce the thesis pipeline. With 0 the system is
 # bit-for-bit stock ORB-SLAM3 and the dense thread is never created.
 #--------------------------------------------------------------------------------------------
-Dense.enabled: 0
+Dense.enabled: 1
 
 # Voxel grid leaf size [m]. Sec. 3.2 removes "more than 90% of the voxels" here.
 Dense.resolution: 0.02

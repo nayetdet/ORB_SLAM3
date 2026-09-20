@@ -47,11 +47,13 @@ pkgs.mkShell {
     librealsense
     libxkbcommon
     mesa
+    octomap
     openssl
     opencv4
     pangolin
+    pcl
     pkg-config
-    python3
+    (python3.withPackages (ps: with ps; [ numpy pyyaml ]))
     unzip
     wget
     wayland

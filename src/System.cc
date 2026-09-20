@@ -20,6 +20,7 @@
 
 #include "System.h"
 #include "Converter.h"
+#include "PointCloudMapping.h"
 #include <thread>
 #include <pangolin/pangolin.h>
 #include <iomanip>
@@ -185,11 +186,26 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     mpFrameDrawer = new FrameDrawer(mpAtlas);
     mpMapDrawer = new MapDrawer(mpAtlas, strSettingsFile, settings_);
 
+    //Initialize the Dense Reconstruction thread (Zhang 2023, ch. 3).
+    //Stays null unless Dense.enabled is set in the settings file.
+    mpPointCloudMapping = nullptr;
+    {
+        PointCloudMapping::Config denseCfg = PointCloudMapping::LoadConfig(strSettingsFile);
+        if(denseCfg.enabled)
+        {
+            if(mSensor==MONOCULAR || mSensor==IMU_MONOCULAR)
+                cerr << "[Dense] reconstruction needs depth: not available for monocular. Disabled." << endl;
+            else
+                mpPointCloudMapping = new PointCloudMapping(denseCfg, static_cast<int>(mSensor));
+        }
+    }
+
     //Initialize the Tracking thread
     //(it will live in the main thread of execution, the one that called this constructor)
     cout << "Seq. Name: " << strSequence << endl;
     mpTracker = new Tracking(this, mpVocabulary, mpFrameDrawer, mpMapDrawer,
                              mpAtlas, mpKeyFrameDatabase, strSettingsFile, mSensor, settings_, strSequence);
+    mpTracker->SetPointCloudMapping(mpPointCloudMapping);
 
     //Initialize the Local Mapping thread and launch
     mpLocalMapper = new LocalMapping(this, mpAtlas, mSensor==MONOCULAR || mSensor==IMU_MONOCULAR,
@@ -544,6 +560,17 @@ void System::Shutdown()
         }*/
         /*usleep(5000);
     }*/
+
+    if(mpPointCloudMapping)
+    {
+        // Drain the queue before saving: keyframes still pending would otherwise
+        // be missing from the dense map.
+        mpPointCloudMapping->RequestFinish();
+        while(!mpPointCloudMapping->IsFinished())
+            usleep(5000);
+        mpPointCloudMapping->Save();
+        mpPointCloudMapping->PrintTimingSummary();
+    }
 
     if(!mStrSaveAtlasToFile.empty())
     {

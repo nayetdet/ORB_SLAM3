@@ -1,0 +1,216 @@
+# Benchmark registry for the Fase 0 evaluation harness.
+#
+# Fill in `roots` with your local dataset paths; everything else is already wired
+# to the files that ship with this repo. Paths without a leading / are resolved
+# against the repo root.
+
+roots:
+  # EuRoC: one folder per sequence, each containing mav0/
+  euroc: ~/Datasets/EuRoC
+  # KITTI odometry: expects sequences/ and poses/ underneath
+  kitti: ~/Datasets/KITTI/odometry
+  # TUM RGB-D: one rgbd_dataset_freiburgN_* folder per sequence
+  tum: ~/Datasets/TUM
+
+vocabulary: Vocabulary/ORBvoc.txt
+
+# ---------------------------------------------------------------------------
+# Configurations = one SLAM binary + settings + how to score its output.
+#
+# The `align` and `gt` fields are the point of this file. Getting them wrong is
+# the single easiest way to produce numbers that look fine and mean nothing:
+#   * align: sim3 only for monocular. Stereo and RGB-D observe scale, so scoring
+#     them with a solved-for scale hides scale drift and breaks comparability
+#     with the published ORB-SLAM2/3 tables.
+#   * gt frame: System::SaveTrajectoryEuRoC writes the IMU/body pose for inertial
+#     sensors (GetImuPose, mTbc) and the cam0 pose otherwise. So pure stereo is
+#     scored against Ground_truth/EuRoC_left_cam (cam0 frame) while inertial is
+#     scored against the dataset's own state_groundtruth_estimate0 (body frame).
+#     Crossing the two adds a fixed ~7 cm extrinsic offset to every pose.
+# ---------------------------------------------------------------------------
+configs:
+
+  euroc_stereo:
+    dataset: euroc
+    sensor: stereo
+    align: se3
+    binary: Examples/Stereo/stereo_euroc
+    settings: Examples/Stereo/EuRoC.yaml
+    timestamps_dir: Examples/Stereo/EuRoC_TimeStamps
+    est_format: orb_euroc
+    gt_format: gt_euroc
+    gt_dir: evaluation/Ground_truth/EuRoC_left_cam   # cam0 frame
+    gt_template: "{gt}"
+    max_diff: 0.02
+
+  euroc_stereo_inertial:
+    dataset: euroc
+    sensor: imu_stereo
+    align: se3
+    binary: Examples/Stereo-Inertial/stereo_inertial_euroc
+    settings: Examples/Stereo-Inertial/EuRoC.yaml
+    timestamps_dir: Examples/Stereo-Inertial/EuRoC_TimeStamps
+    est_format: orb_euroc
+    gt_format: gt_euroc
+    # body/IMU frame -- comes from the sequence folder, not from Ground_truth/
+    gt_from_sequence: "mav0/state_groundtruth_estimate0/data.csv"
+    max_diff: 0.02
+
+  kitti_stereo:
+    dataset: kitti
+    sensor: stereo
+    align: se3
+    binary: Examples/Stereo/stereo_kitti
+    est_format: orb_kitti
+    gt_format: gt_kitti
+    gt_template: "poses/{gt}"
+    # KITTI trajectories are frame-indexed, not timestamped: match frame i to i.
+    max_diff: 0.5
+    kitti_relative: true
+
+  tum_rgbd:
+    dataset: tum
+    sensor: rgbd
+    align: se3
+    binary: Examples/RGB-D/rgbd_tum
+    associations_dir: Examples/RGB-D/associations
+    est_format: orb_tum
+    gt_format: gt_tum
+    gt_from_sequence: "groundtruth.txt"
+    max_diff: 0.02
+
+  # --- Zhang 2023 reproduction: same binaries, dense reconstruction switched on.
+  # The *_Dense.yaml settings differ from their baseline twin only in
+  # Dense.enabled, so a baseline/dense pair isolates the cost of the dense thread.
+
+  euroc_stereo_dense:
+    dataset: euroc
+    sensor: stereo
+    align: se3
+    binary: Examples/Stereo/stereo_euroc
+    settings: Examples/Stereo/EuRoC_Dense.yaml
+    timestamps_dir: Examples/Stereo/EuRoC_TimeStamps
+    est_format: orb_euroc
+    gt_format: gt_euroc
+    gt_dir: evaluation/Ground_truth/EuRoC_left_cam
+    gt_template: "{gt}"
+    max_diff: 0.02
+
+  kitti_stereo_dense:
+    dataset: kitti
+    sensor: stereo
+    align: se3
+    binary: Examples/Stereo/stereo_kitti
+    est_format: orb_kitti
+    gt_format: gt_kitti
+    gt_template: "poses/{gt}"
+    max_diff: 0.5
+    kitti_relative: true
+
+  tum_rgbd_dense:
+    dataset: tum
+    sensor: rgbd
+    align: se3
+    binary: Examples/RGB-D/rgbd_tum
+    associations_dir: Examples/RGB-D/associations
+    est_format: orb_tum
+    gt_format: gt_tum
+    gt_from_sequence: "groundtruth.txt"
+    max_diff: 0.02
+
+# ---------------------------------------------------------------------------
+# Sequences. `folder` is relative to the dataset root.
+# ---------------------------------------------------------------------------
+sequences:
+
+  euroc_stereo: &euroc_seqs
+    MH01: {folder: MH_01_easy,      times: MH01.txt, gt: MH01_GT.txt}
+    MH02: {folder: MH_02_easy,      times: MH02.txt, gt: MH02_GT.txt}
+    MH03: {folder: MH_03_medium,    times: MH03.txt, gt: MH03_GT.txt}
+    MH04: {folder: MH_04_difficult, times: MH04.txt, gt: MH04_GT.txt}
+    MH05: {folder: MH_05_difficult, times: MH05.txt, gt: MH05_GT.txt}
+    V101: {folder: V1_01_easy,      times: V101.txt, gt: V101_GT.txt}
+    V102: {folder: V1_02_medium,    times: V102.txt, gt: V102_GT.txt}
+    V103: {folder: V1_03_difficult, times: V103.txt, gt: V103_GT.txt}
+    V201: {folder: V2_01_easy,      times: V201.txt, gt: V201_GT.txt}
+    V202: {folder: V2_02_medium,    times: V202.txt, gt: V202_GT.txt}
+    V203: {folder: V2_03_difficult, times: V203.txt, gt: V203_GT.txt}
+
+  euroc_stereo_inertial: *euroc_seqs
+  euroc_stereo_dense: *euroc_seqs
+
+  kitti_stereo:
+    "00": {folder: sequences/00, gt: "00.txt", settings: Examples/Stereo/KITTI00-02.yaml}
+    "01": {folder: sequences/01, gt: "01.txt", settings: Examples/Stereo/KITTI00-02.yaml}
+    "02": {folder: sequences/02, gt: "02.txt", settings: Examples/Stereo/KITTI00-02.yaml}
+    "03": {folder: sequences/03, gt: "03.txt", settings: Examples/Stereo/KITTI03.yaml}
+    "04": {folder: sequences/04, gt: "04.txt", settings: Examples/Stereo/KITTI04-12.yaml}
+    "05": {folder: sequences/05, gt: "05.txt", settings: Examples/Stereo/KITTI04-12.yaml}
+    "06": {folder: sequences/06, gt: "06.txt", settings: Examples/Stereo/KITTI04-12.yaml}
+    "07": {folder: sequences/07, gt: "07.txt", settings: Examples/Stereo/KITTI04-12.yaml}
+    "08": {folder: sequences/08, gt: "08.txt", settings: Examples/Stereo/KITTI04-12.yaml}
+    "09": {folder: sequences/09, gt: "09.txt", settings: Examples/Stereo/KITTI04-12.yaml}
+    "10": {folder: sequences/10, gt: "10.txt", settings: Examples/Stereo/KITTI04-12.yaml}
+
+  kitti_stereo_dense:
+    "00": {folder: sequences/00, gt: "00.txt", settings: Examples/Stereo/KITTI00-02_Dense.yaml}
+    "01": {folder: sequences/01, gt: "01.txt", settings: Examples/Stereo/KITTI00-02_Dense.yaml}
+    "02": {folder: sequences/02, gt: "02.txt", settings: Examples/Stereo/KITTI00-02_Dense.yaml}
+    "03": {folder: sequences/03, gt: "03.txt", settings: Examples/Stereo/KITTI03_Dense.yaml}
+    "04": {folder: sequences/04, gt: "04.txt", settings: Examples/Stereo/KITTI04-12_Dense.yaml}
+    "05": {folder: sequences/05, gt: "05.txt", settings: Examples/Stereo/KITTI04-12_Dense.yaml}
+    "06": {folder: sequences/06, gt: "06.txt", settings: Examples/Stereo/KITTI04-12_Dense.yaml}
+    "07": {folder: sequences/07, gt: "07.txt", settings: Examples/Stereo/KITTI04-12_Dense.yaml}
+    "08": {folder: sequences/08, gt: "08.txt", settings: Examples/Stereo/KITTI04-12_Dense.yaml}
+    "09": {folder: sequences/09, gt: "09.txt", settings: Examples/Stereo/KITTI04-12_Dense.yaml}
+    "10": {folder: sequences/10, gt: "10.txt", settings: Examples/Stereo/KITTI04-12_Dense.yaml}
+
+  tum_rgbd:
+    fr1_desk:   {folder: rgbd_dataset_freiburg1_desk,   assoc: fr1_desk.txt,   settings: Examples/RGB-D/TUM1.yaml}
+    fr1_room:   {folder: rgbd_dataset_freiburg1_room,   assoc: fr1_room.txt,   settings: Examples/RGB-D/TUM1.yaml}
+    fr1_xyz:    {folder: rgbd_dataset_freiburg1_xyz,    assoc: fr1_xyz.txt,    settings: Examples/RGB-D/TUM1.yaml}
+    fr2_desk:   {folder: rgbd_dataset_freiburg2_desk,   assoc: fr2_desk.txt,   settings: Examples/RGB-D/TUM2.yaml}
+    fr2_xyz:    {folder: rgbd_dataset_freiburg2_xyz,    assoc: fr2_xyz.txt,    settings: Examples/RGB-D/TUM2.yaml}
+    fr3_office: {folder: rgbd_dataset_freiburg3_long_office_household, assoc: fr3_office.txt, settings: Examples/RGB-D/TUM3.yaml}
+    # The fr2_large pair of Figures 26-27: the multi-sequence demonstration.
+    # Neither has an association file in this repo -- generate them first with
+    #   python3 evaluation/harness/make_tum_associations.py \
+    #       <root>/rgbd_dataset_freiburg2_large_no_loop \
+    #       > Examples/RGB-D/associations/fr2_large_no_loop.txt
+    fr2_large_no_loop:   {folder: rgbd_dataset_freiburg2_large_no_loop,   assoc: fr2_large_no_loop.txt,   settings: Examples/RGB-D/TUM2.yaml}
+    fr2_large_with_loop: {folder: rgbd_dataset_freiburg2_large_with_loop, assoc: fr2_large_with_loop.txt, settings: Examples/RGB-D/TUM2.yaml}
+
+  tum_rgbd_dense:
+    fr1_desk:   {folder: rgbd_dataset_freiburg1_desk,   assoc: fr1_desk.txt,   settings: Examples/RGB-D/TUM1_Dense.yaml}
+    fr1_room:   {folder: rgbd_dataset_freiburg1_room,   assoc: fr1_room.txt,   settings: Examples/RGB-D/TUM1_Dense.yaml}
+    fr1_xyz:    {folder: rgbd_dataset_freiburg1_xyz,    assoc: fr1_xyz.txt,    settings: Examples/RGB-D/TUM1_Dense.yaml}
+    fr2_desk:   {folder: rgbd_dataset_freiburg2_desk,   assoc: fr2_desk.txt,   settings: Examples/RGB-D/TUM2_Dense.yaml}
+    fr2_xyz:    {folder: rgbd_dataset_freiburg2_xyz,    assoc: fr2_xyz.txt,    settings: Examples/RGB-D/TUM2_Dense.yaml}
+    fr3_office: {folder: rgbd_dataset_freiburg3_long_office_household, assoc: fr3_office.txt, settings: Examples/RGB-D/TUM3_Dense.yaml}
+    # The fr2_large pair of Figures 26-27: the multi-sequence demonstration.
+    # Neither has an association file in this repo -- generate them first with
+    #   python3 evaluation/harness/make_tum_associations.py \
+    #       <root>/rgbd_dataset_freiburg2_large_no_loop \
+    #       > Examples/RGB-D/associations/fr2_large_no_loop.txt
+    fr2_large_no_loop:   {folder: rgbd_dataset_freiburg2_large_no_loop,   assoc: fr2_large_no_loop.txt,   settings: Examples/RGB-D/TUM2_Dense.yaml}
+    fr2_large_with_loop: {folder: rgbd_dataset_freiburg2_large_with_loop, assoc: fr2_large_with_loop.txt, settings: Examples/RGB-D/TUM2_Dense.yaml}
+    # The thesis also uses fr2_large_no_loop / fr2_large_with_loop, which have no
+    # association file in this repo. Generate one with:
+    #   python3 evaluation/harness/make_tum_associations.py <seq_folder> > Examples/RGB-D/associations/fr2_large_no_loop.txt
+    # then add the entry here with settings: Examples/RGB-D/TUM2.yaml
+
+# ---------------------------------------------------------------------------
+# Baselines from the literature, for the comparison table. These are reference
+# values measured on OTHER hardware -- they are printed for context only and must
+# never be the thing a change is judged against. Re-run the baseline locally.
+# ---------------------------------------------------------------------------
+reference:
+  euroc_stereo:   # ORB-SLAM3 paper, stereo, ATE RMSE [m]
+    {MH01: 0.029, MH02: 0.019, MH03: 0.024, MH04: 0.085, MH05: 0.052,
+     V101: 0.035, V102: 0.025, V103: 0.061}
+  thesis_euroc:   # Hanxiang Zhang 2023, Table V, ATE RMSE [m]
+    {MH01: 0.039, MH02: 0.028, MH03: 0.032, MH04: 0.112, MH05: 0.061,
+     V101: 0.042, V102: 0.036, V103: 0.107}
+  thesis_kitti:   # Hanxiang Zhang 2023, Table VI, ATE RMSE [m]
+    {"00": 1.248, "01": 5.596, "02": 1.924, "03": 0.637, "04": 0.233, "05": 0.561,
+     "06": 1.352, "07": 0.459, "08": 2.654, "09": 3.861, "10": 1.245}

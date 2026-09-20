@@ -18,6 +18,7 @@
 
 
 #include "Tracking.h"
+#include "PointCloudMapping.h"
 
 #include "ORBmatcher.h"
 #include "FrameDrawer.h"
@@ -48,6 +49,7 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
     mpFrameDrawer(pFrameDrawer), mpMapDrawer(pMapDrawer), mpAtlas(pAtlas), mnLastRelocFrameId(0), time_recently_lost(5.0),
     mnInitialFrameId(0), mbCreatedMap(false), mnFirstFrameId(0), mpCamera2(nullptr), mpLastKeyFrame(static_cast<KeyFrame*>(NULL))
 {
+    mpPointCloudMapping = nullptr;
     // Load camera parameters from settings file
     if(settings){
         newParameterLoader(settings);
@@ -1439,6 +1441,11 @@ void Tracking::SetViewer(Viewer *pViewer)
     mpViewer=pViewer;
 }
 
+void Tracking::SetPointCloudMapping(PointCloudMapping *pPointCloudMapping)
+{
+    mpPointCloudMapping=pPointCloudMapping;
+}
+
 void Tracking::SetStepByStep(bool bSet)
 {
     bStepByStep = bSet;
@@ -1486,6 +1493,14 @@ Sophus::SE3f Tracking::GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat 
             cvtColor(mImGray,mImGray,cv::COLOR_BGRA2GRAY);
             cvtColor(imGrayRight,imGrayRight,cv::COLOR_BGRA2GRAY);
         }
+    }
+
+    // Algorithm 2 input: the rectified stereo pair. Rectification already
+    // happened in System::TrackStereo, so these are ready for the disparity step.
+    if(mpPointCloudMapping)
+    {
+        mImColorDense = mImGray;
+        mImRightDense = imGrayRight;
     }
 
     //cout << "Incoming frame creation" << endl;
@@ -1539,6 +1554,15 @@ Sophus::SE3f Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, co
 
     if((fabs(mDepthMapFactor-1.0f)>1e-5) || imDepth.type()!=CV_32F)
         imDepth.convertTo(imDepth,CV_32F,mDepthMapFactor);
+
+    // Algorithm 1 input: the colour image as received (imRGB is untouched by the
+    // greyscale conversion above, which reallocates mImGray) and the depth map
+    // already scaled to metres.
+    if(mpPointCloudMapping)
+    {
+        mImColorDense = imRGB;
+        mImDepthDense = imDepth;
+    }
 
     if (mSensor == System::RGBD)
         mCurrentFrame = Frame(mImGray,imDepth,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth,mpCamera);
@@ -3333,6 +3357,17 @@ void Tracking::CreateNewKeyFrame()
 
 
     mpLocalMapper->InsertKeyFrame(pKF);
+
+    // Algorithm 1 line 4 / Algorithm 2 line 5: hand the keyframe's images to the
+    // Dense Reconstruction thread. Non-blocking; a null mapper means the feature
+    // is off and this costs nothing.
+    if(mpPointCloudMapping)
+    {
+        if(mSensor==System::RGBD || mSensor==System::IMU_RGBD)
+            mpPointCloudMapping->InsertKeyFrameRGBD(pKF, mImColorDense, mImDepthDense);
+        else if(mSensor==System::STEREO || mSensor==System::IMU_STEREO)
+            mpPointCloudMapping->InsertKeyFrameStereo(pKF, mImColorDense, mImRightDense);
+    }
 
     mpLocalMapper->SetNotStop(false);
 

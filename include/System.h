@@ -79,6 +79,7 @@ class Tracking;
 class LocalMapping;
 class LoopClosing;
 class Settings;
+class PointCloudMapping;
 
 class System
 {
@@ -216,6 +217,11 @@ private:
     // It also decides when to insert a new keyframe, create some new MapPoints and
     // performs relocalization if tracking fails.
     Tracking* mpTracker;
+
+    // Dense Reconstruction thread (Zhang 2023). Null when the feature is
+    // disabled in the settings file, in which case the system behaves
+    // exactly like stock ORB-SLAM3.
+    PointCloudMapping* mpPointCloudMapping;
 
     // Local Mapper. It manages the local map and performs local bundle adjustment.
     LocalMapping* mpLocalMapper;

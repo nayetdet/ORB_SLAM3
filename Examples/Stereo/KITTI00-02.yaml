@@ -61,3 +61,48 @@ Viewer.ViewpointY: -100
 Viewer.ViewpointZ: -0.1
 Viewer.ViewpointF: 2000.0
 
+
+#--------------------------------------------------------------------------------------------
+# Dense Reconstruction (Zhang 2023, ch. 3) -- optional, off by default.
+# Set Dense.enabled to 1 to reproduce the thesis pipeline. With 0 the system is
+# bit-for-bit stock ORB-SLAM3 and the dense thread is never created.
+#--------------------------------------------------------------------------------------------
+Dense.enabled: 0
+
+# Voxel grid leaf size [m]. Sec. 3.2 removes "more than 90% of the voxels" here.
+Dense.resolution: 0.1
+
+# d_min / d_max of eq. (34): the depth range a point must fall in to be used,
+# and the range over which its confidence is interpolated.
+Dense.depthMin: 1.0
+Dense.depthMax: 40.0
+
+# Sec. 3.5: probabilistic merge. Turn on for multi-sequence runs; P_max is the
+# confidence at d_min (P_min = 1 - P_max). mergeDistance 0 means "use resolution".
+Dense.probabilisticMerge: 0
+Dense.probMax: 0.9
+Dense.mergeDistance: 0.0
+
+# Prior cloud to merge into, for the second and later sequences of a
+# multi-sequence run (sec. 3.5). Empty means start from scratch.
+Dense.loadCloud: ""
+
+# Octomap, sec. 3.4. Thesis 4.4: ~0.01 m indoors, >=0.05 m outdoors (0.2 typical).
+Dense.octomapEnabled: 1
+Dense.octomapResolution: 0.2
+
+# Output: <saveDirectory>/<savePrefix>_cloud.pcd and _octomap.ot
+Dense.saveDirectory: "."
+Dense.savePrefix: "kitti"
+
+# Stereo only (Algorithm 2). numDisparities must be divisible by 16, blockSize odd.
+Dense.sgbmNumDisparities: 128
+Dense.sgbmBlockSize: 9
+# ROI margins (Algorithm 2 line 13), trimming the invalid rectification border.
+Dense.roiMarginX: 0
+Dense.roiMarginY: 0
+# Sec. 4.2: stereo images are greyscale, so points are rainbow-coloured by depth
+# (far = red). Set to 0 to use a single solid colour instead, which sec. 3.3 notes
+# is preferable when merging several sequences of the same scene.
+Dense.colorizeByDepth: 1
+Dense.solidColor: [200, 200, 200]

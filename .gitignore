@@ -102,3 +102,6 @@ borrar/*
 !.devcontainer/build/**
 
 */ExecMean.txt
+
+# Evaluation harness output (trajectories, SLAM logs, per-run results)
+evaluation/results/

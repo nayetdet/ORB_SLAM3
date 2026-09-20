@@ -12,20 +12,21 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall   -O3")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
 
-# Check C++11 or C++0x support
+# C++17 is required by the dependencies, not by ORB-SLAM3 itself:
+#   - Pangolin >= 0.8 ships sigslot, whose headers use std::decay_t etc. Building
+#     this project as C++11 against it fails in every translation unit that
+#     reaches include/Map.h, which includes pangolin.h.
+#   - PCL >= 1.13 requires C++17.
+# COMPILEDWITHC11 is still defined because the sources use it to select
+# std::chrono::steady_clock, which is what we want here.
 include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
-if(COMPILER_SUPPORTS_CXX11)
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+CHECK_CXX_COMPILER_FLAG("-std=c++17" COMPILER_SUPPORTS_CXX17)
+if(COMPILER_SUPPORTS_CXX17)
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
    add_definitions(-DCOMPILEDWITHC11)
-   message(STATUS "Using flag -std=c++11.")
-elseif(COMPILER_SUPPORTS_CXX0X)
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
-   add_definitions(-DCOMPILEDWITHC0X)
-   message(STATUS "Using flag -std=c++0x.")
+   message(STATUS "Using flag -std=c++17.")
 else()
-   message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+   message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++17 support. Please use a different C++ compiler.")
 endif()
 
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
@@ -41,6 +42,18 @@ MESSAGE(${OpenCV_VERSION})
 find_package(Eigen3 3.1.0 REQUIRED)
 find_package(Pangolin REQUIRED)
 find_package(realsense2)
+
+# Dense Reconstruction thread (Zhang 2023). Optional: without PCL and octomap the
+# feature compiles to no-ops and the rest of the system is unaffected.
+find_package(PCL QUIET COMPONENTS common io filters kdtree)
+find_package(octomap QUIET)
+if(PCL_FOUND AND octomap_FOUND)
+   set(DENSE_RECONSTRUCTION ON)
+   MESSAGE(STATUS "Dense reconstruction: ENABLED (PCL ${PCL_VERSION}, octomap ${octomap_VERSION})")
+else()
+   set(DENSE_RECONSTRUCTION OFF)
+   MESSAGE(STATUS "Dense reconstruction: DISABLED (install libpcl-dev and liboctomap-dev to enable)")
+endif()
 
 include_directories(
 ${PROJECT_SOURCE_DIR}
@@ -82,6 +95,7 @@ src/GeometricTools.cc
 src/TwoViewReconstruction.cc
 src/Config.cc
 src/Settings.cc
+src/PointCloudMapping.cc
 include/System.h
 include/Tracking.h
 include/LocalMapping.h
@@ -111,7 +125,8 @@ include/GeometricTools.h
 include/TwoViewReconstruction.h
 include/SerializationUtils.h
 include/Config.h
-include/Settings.h)
+include/Settings.h
+include/PointCloudMapping.h)
 
 add_subdirectory(Thirdparty/g2o)
 
@@ -124,6 +139,16 @@ ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
 -lboost_serialization
 -lcrypto
 )
+
+if(DENSE_RECONSTRUCTION)
+   include_directories(${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS})
+   link_directories(${PCL_LIBRARY_DIRS})
+   target_link_libraries(${PROJECT_NAME} ${PCL_LIBRARIES} ${OCTOMAP_LIBRARIES})
+   # PointCloudMapping.h stays free of PCL headers on purpose, so this is the one
+   # translation unit that sees PCL and the only one that needs the flag.
+   set_source_files_properties(src/PointCloudMapping.cc PROPERTIES
+      COMPILE_FLAGS "-DWITH_DENSE_RECONSTRUCTION")
+endif()
 
 # If RealSense SDK is found the library is added and its examples compiled
 if(realsense2_FOUND)

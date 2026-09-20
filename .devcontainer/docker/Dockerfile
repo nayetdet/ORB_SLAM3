@@ -23,6 +23,7 @@ RUN apt-get update \
         python3 \
         python3-numpy \
         python3-matplotlib \
+        python3-yaml \
         gdb \
         valgrind \
         clang \
@@ -34,6 +35,8 @@ RUN apt-get update \
         libboost-all-dev \
         libeigen3-dev \
         libopencv-dev \
+        libpcl-dev \
+        liboctomap-dev \
         libglew-dev \
         libgl-dev \
         libglu1-mesa-dev \

@@ -52,6 +52,7 @@ class LocalMapping;
 class LoopClosing;
 class System;
 class Settings;
+class PointCloudMapping;
 
 class Tracking
 {  
@@ -78,6 +79,7 @@ public:
     void SetLocalMapper(LocalMapping* pLocalMapper);
     void SetLoopClosing(LoopClosing* pLoopClosing);
     void SetViewer(Viewer* pViewer);
+    void SetPointCloudMapping(PointCloudMapping* pPointCloudMapping);
     void SetStepByStep(bool bSet);
     bool GetStepByStep();
 
@@ -139,6 +141,15 @@ public:
     Frame mLastFrame;
 
     cv::Mat mImGray;
+
+    // Kept for the Dense Reconstruction thread (Zhang 2023, Algorithms 1 and 2):
+    // the colour image before the greyscale conversion, the depth map after the
+    // DepthMapFactor scaling, and the rectified right view. Only populated when
+    // dense reconstruction is enabled.
+    cv::Mat mImColorDense;
+    cv::Mat mImDepthDense;
+    cv::Mat mImRightDense;
+    PointCloudMapping* mpPointCloudMapping;
 
     // Initialization Variables (Monocular)
     std::vector<int> mvIniLastMatches;

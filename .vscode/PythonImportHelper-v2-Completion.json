@@ -1,0 +1,1126 @@
+[
+    {
+        "label": "sys",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "sys",
+        "description": "sys",
+        "detail": "sys",
+        "documentation": {}
+    },
+    {
+        "label": "numpy",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "numpy",
+        "description": "numpy",
+        "detail": "numpy",
+        "documentation": {}
+    },
+    {
+        "label": "matplotlib.pyplot",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "matplotlib.pyplot",
+        "description": "matplotlib.pyplot",
+        "detail": "matplotlib.pyplot",
+        "documentation": {}
+    },
+    {
+        "label": "sophus",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "sophus",
+        "description": "sophus",
+        "detail": "sophus",
+        "documentation": {}
+    },
+    {
+        "label": "sympy",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "sympy",
+        "description": "sympy",
+        "detail": "sympy",
+        "documentation": {}
+    },
+    {
+        "label": "unittest",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "unittest",
+        "description": "unittest",
+        "detail": "unittest",
+        "documentation": {}
+    },
+    {
+        "label": "io",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "io",
+        "description": "io",
+        "detail": "io",
+        "documentation": {}
+    },
+    {
+        "label": "functools",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "functools",
+        "description": "functools",
+        "detail": "functools",
+        "documentation": {}
+    },
+    {
+        "label": "codegen",
+        "importPath": "sympy.utilities.codegen",
+        "description": "sympy.utilities.codegen",
+        "isExtraImport": true,
+        "detail": "sympy.utilities.codegen",
+        "documentation": {}
+    },
+    {
+        "label": "os",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "os",
+        "description": "os",
+        "detail": "os",
+        "documentation": {}
+    },
+    {
+        "label": "argparse",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "argparse",
+        "description": "argparse",
+        "detail": "argparse",
+        "documentation": {}
+    },
+    {
+        "label": "json",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "json",
+        "description": "json",
+        "detail": "json",
+        "documentation": {}
+    },
+    {
+        "label": "metrics",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "metrics",
+        "description": "metrics",
+        "detail": "metrics",
+        "documentation": {}
+    },
+    {
+        "label": "traj_io",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "traj_io",
+        "description": "traj_io",
+        "detail": "traj_io",
+        "documentation": {}
+    },
+    {
+        "label": "shutil",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "shutil",
+        "description": "shutil",
+        "detail": "shutil",
+        "documentation": {}
+    },
+    {
+        "label": "subprocess",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "subprocess",
+        "description": "subprocess",
+        "detail": "subprocess",
+        "documentation": {}
+    },
+    {
+        "label": "time",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "time",
+        "description": "time",
+        "detail": "time",
+        "documentation": {}
+    },
+    {
+        "label": "evaluate",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "evaluate",
+        "description": "evaluate",
+        "detail": "evaluate",
+        "documentation": {}
+    },
+    {
+        "label": "tempfile",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "tempfile",
+        "description": "tempfile",
+        "detail": "tempfile",
+        "documentation": {}
+    },
+    {
+        "label": "struct",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "struct",
+        "description": "struct",
+        "detail": "struct",
+        "documentation": {}
+    },
+    {
+        "label": "associate",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "associate",
+        "description": "associate",
+        "detail": "associate",
+        "documentation": {}
+    },
+    {
+        "label": "dataset",
+        "kind": 6,
+        "importPath": "Examples.Calibration.python_scripts.process_imu",
+        "description": "Examples.Calibration.python_scripts.process_imu",
+        "peekOfCode": "class dataset:\n    # imu_sync = np.zeros((1,7))\n    # acc = np.zeros((1,7))\n    # gyro = np.zeros((1,7))\n    def __init__(self, dirName):\n        self.name = dirName\n        self.acc = np.zeros((1, 4))\n        self.gyro = np.zeros((1, 4))\n        self.timesCam = np.zeros((1, 1))\n        timesName = self.name + \"/cam0/times.txt\"",
+        "detail": "Examples.Calibration.python_scripts.process_imu",
+        "documentation": {}
+    },
+    {
+        "label": "Complex",
+        "kind": 6,
+        "importPath": "Thirdparty.Sophus.py.sophus.complex",
+        "description": "Thirdparty.Sophus.py.sophus.complex",
+        "peekOfCode": "class Complex:\n    \"\"\" Complex class \"\"\"\n    def __init__(self, real, imag):\n        self.real = real\n        self.imag = imag\n    def __mul__(self, right):\n        \"\"\" complex multiplication \"\"\"\n        return Complex(self.real * right.real - self.imag * right.imag,\n                       self.imag * right.real + self.real * right.imag)\n    def __add__(self, right):",
+        "detail": "Thirdparty.Sophus.py.sophus.complex",
+        "documentation": {}
+    },
+    {
+        "label": "TestComplex",
+        "kind": 6,
+        "importPath": "Thirdparty.Sophus.py.sophus.complex",
+        "description": "Thirdparty.Sophus.py.sophus.complex",
+        "peekOfCode": "class TestComplex(unittest.TestCase):\n    def setUp(self):\n        x, y = sympy.symbols('x y', real=True)\n        u, v = sympy.symbols('u v', real=True)\n        self.a = Complex(x, y)\n        self.b = Complex(u, v)\n    def test_muliplications(self):\n        product = self.a * self.a.inv()\n        self.assertEqual(product.simplify(),\n                         Complex.identity())",
+        "detail": "Thirdparty.Sophus.py.sophus.complex",
+        "documentation": {}
+    },
+    {
+        "label": "cse_codegen",
+        "kind": 2,
+        "importPath": "Thirdparty.Sophus.py.sophus.cse_codegen",
+        "description": "Thirdparty.Sophus.py.sophus.cse_codegen",
+        "peekOfCode": "def cse_codegen(symbols):\n    cse_results = sympy.cse(symbols, sympy.numbered_symbols(\"c\"))\n    output = io.StringIO()\n    for helper in cse_results[0]:\n        output.write(\"Scalar const \")\n        output.write(sympy.printing.ccode(helper[1], helper[0]))\n        output.write(\"\\n\")\n    assert len(cse_results[1]) == 1\n    output.write(sympy.printing.ccode(cse_results[1][0], \"result\"))\n    output.write(\"\\n\")",
+        "detail": "Thirdparty.Sophus.py.sophus.cse_codegen",
+        "documentation": {}
+    },
+    {
+        "label": "DualQuaternion",
+        "kind": 6,
+        "importPath": "Thirdparty.Sophus.py.sophus.dual_quaternion",
+        "description": "Thirdparty.Sophus.py.sophus.dual_quaternion",
+        "peekOfCode": "class DualQuaternion:\n    \"\"\" Dual quaternion class \"\"\"\n    def __init__(self, real_q, inf_q):\n        \"\"\" Dual quaternion consists of a real quaternion, and an infinitesimal\n            quaternion \"\"\"\n        self.real_q = real_q\n        self.inf_q = inf_q\n    def __mul__(self, right):\n        \"\"\" dual quaternion multiplication \"\"\"\n        return DualQuaternion(self.real_q * right.real_q,",
+        "detail": "Thirdparty.Sophus.py.sophus.dual_quaternion",
+        "documentation": {}
+    },
+    {
+        "label": "TestDualQuaternion",
+        "kind": 6,
+        "importPath": "Thirdparty.Sophus.py.sophus.dual_quaternion",
+        "description": "Thirdparty.Sophus.py.sophus.dual_quaternion",
+        "peekOfCode": "class TestDualQuaternion(unittest.TestCase):\n    def setUp(self):\n        w, s0, s1, s2 = sympy.symbols('w s0 s1 s2', real=True)\n        x, t0, t1, t2 = sympy.symbols('x t0 t1 t2', real=True)\n        y, u0, u1, u2 = sympy.symbols('y u0 u1 u2', real=True)\n        z, v0, v1, v2 = sympy.symbols('z v0 v1 v2', real=True)\n        s = sophus.Vector3(s0, s1, s2)\n        t = sophus.Vector3(t0, t1, t2)\n        u = sophus.Vector3(u0, u1, u2)\n        v = sophus.Vector3(v0, v1, v2)",
+        "detail": "Thirdparty.Sophus.py.sophus.dual_quaternion",
+        "documentation": {}
+    },
+    {
+        "label": "dot",
+        "kind": 2,
+        "importPath": "Thirdparty.Sophus.py.sophus.matrix",
+        "description": "Thirdparty.Sophus.py.sophus.matrix",
+        "peekOfCode": "def dot(left, right):\n    assert(isinstance(left, sympy.Matrix))\n    assert(isinstance(right, sympy.Matrix))\n    sum = 0\n    for c in range(0, left.cols):\n        for r in range(0, left.rows):\n            sum += left[r, c] * right[r, c]\n    return sum\ndef squared_norm(m):\n    assert(isinstance(m, sympy.Matrix))",
+        "detail": "Thirdparty.Sophus.py.sophus.matrix",
+        "documentation": {}
+    },
+    {
+        "label": "squared_norm",
+        "kind": 2,
+        "importPath": "Thirdparty.Sophus.py.sophus.matrix",
+        "description": "Thirdparty.Sophus.py.sophus.matrix",
+        "peekOfCode": "def squared_norm(m):\n    assert(isinstance(m, sympy.Matrix))\n    return dot(m, m)\ndef Vector2(x, y):\n    return sympy.Matrix([x, y])\ndef ZeroVector2():\n    return Vector2(0, 0)\ndef Vector3(x, y, z):\n    return sympy.Matrix([x, y, z])\ndef ZeroVector3():",
+        "detail": "Thirdparty.Sophus.py.sophus.matrix",
+        "documentation": {}
+    },
+    {
+        "label": "Vector2",
+        "kind": 2,
+        "importPath": "Thirdparty.Sophus.py.sophus.matrix",
+        "description": "Thirdparty.Sophus.py.sophus.matrix",
+        "peekOfCode": "def Vector2(x, y):\n    return sympy.Matrix([x, y])\ndef ZeroVector2():\n    return Vector2(0, 0)\ndef Vector3(x, y, z):\n    return sympy.Matrix([x, y, z])\ndef ZeroVector3():\n    return Vector3(0, 0, 0)\ndef Vector6(a, b, c, d, e, f):\n    return sympy.Matrix([a, b, c, d, e, f])",
+        "detail": "Thirdparty.Sophus.py.sophus.matrix",
+        "documentation": {}
+    },
+    {
+        "label": "ZeroVector2",
+        "kind": 2,
+        "importPath": "Thirdparty.Sophus.py.sophus.matrix",
+        "description": "Thirdparty.Sophus.py.sophus.matrix",
+        "peekOfCode": "def ZeroVector2():\n    return Vector2(0, 0)\ndef Vector3(x, y, z):\n    return sympy.Matrix([x, y, z])\ndef ZeroVector3():\n    return Vector3(0, 0, 0)\ndef Vector6(a, b, c, d, e, f):\n    return sympy.Matrix([a, b, c, d, e, f])\ndef ZeroVector6():\n    return Vector6(0, 0, 0, 0, 0, 0)",
+        "detail": "Thirdparty.Sophus.py.sophus.matrix",
+        "documentation": {}
+    },
+    {
+        "label": "Vector3",
+        "kind": 2,
+        "importPath": "Thirdparty.Sophus.py.sophus.matrix",
+        "description": "Thirdparty.Sophus.py.sophus.matrix",
+        "peekOfCode": "def Vector3(x, y, z):\n    return sympy.Matrix([x, y, z])\ndef ZeroVector3():\n    return Vector3(0, 0, 0)\ndef Vector6(a, b, c, d, e, f):\n    return sympy.Matrix([a, b, c, d, e, f])\ndef ZeroVector6():\n    return Vector6(0, 0, 0, 0, 0, 0)\ndef proj(v):\n    m, n = v.shape",
+        "detail": "Thirdparty.Sophus.py.sophus.matrix",
+        "documentation": {}
+    },
+    {
+        "label": "ZeroVector3",
+        "kind": 2,
+        "importPath": "Thirdparty.Sophus.py.sophus.matrix",
+        "description": "Thirdparty.Sophus.py.sophus.matrix",
+        "peekOfCode": "def ZeroVector3():\n    return Vector3(0, 0, 0)\ndef Vector6(a, b, c, d, e, f):\n    return sympy.Matrix([a, b, c, d, e, f])\ndef ZeroVector6():\n    return Vector6(0, 0, 0, 0, 0, 0)\ndef proj(v):\n    m, n = v.shape\n    assert m > 1\n    assert n == 1",
+        "detail": "Thirdparty.Sophus.py.sophus.matrix",
+        "documentation": {}
+    },
+    {
+        "label": "Vector6",
+        "kind": 2,
+        "importPath": "Thirdparty.Sophus.py.sophus.matrix",
+        "description": "Thirdparty.Sophus.py.sophus.matrix",
+        "peekOfCode": "def Vector6(a, b, c, d, e, f):\n    return sympy.Matrix([a, b, c, d, e, f])\ndef ZeroVector6():\n    return Vector6(0, 0, 0, 0, 0, 0)\ndef proj(v):\n    m, n = v.shape\n    assert m > 1\n    assert n == 1\n    l = [v[i] / v[m - 1] for i in range(0, m - 1)]\n    r = sympy.Matrix(m - 1, 1,  l)",
+        "detail": "Thirdparty.Sophus.py.sophus.matrix",
+        "documentation": {}
+    },
+    {
+        "label": "ZeroVector6",
+        "kind": 2,
+        "importPath": "Thirdparty.Sophus.py.sophus.matrix",
+        "description": "Thirdparty.Sophus.py.sophus.matrix",
+        "peekOfCode": "def ZeroVector6():\n    return Vector6(0, 0, 0, 0, 0, 0)\ndef proj(v):\n    m, n = v.shape\n    assert m > 1\n    assert n == 1\n    l = [v[i] / v[m - 1] for i in range(0, m - 1)]\n    r = sympy.Matrix(m - 1, 1,  l)\n    return r\ndef unproj(v):",
+        "detail": "Thirdparty.Sophus.py.sophus.matrix",
+        "documentation": {}
+    },
+    {
+        "label": "proj",
+        "kind": 2,
+        "importPath": "Thirdparty.Sophus.py.sophus.matrix",
+        "description": "Thirdparty.Sophus.py.sophus.matrix",
+        "peekOfCode": "def proj(v):\n    m, n = v.shape\n    assert m > 1\n    assert n == 1\n    l = [v[i] / v[m - 1] for i in range(0, m - 1)]\n    r = sympy.Matrix(m - 1, 1,  l)\n    return r\ndef unproj(v):\n    m, n = v.shape\n    assert m >= 1",
+        "detail": "Thirdparty.Sophus.py.sophus.matrix",
+        "documentation": {}
+    },
+    {
+        "label": "unproj",
+        "kind": 2,
+        "importPath": "Thirdparty.Sophus.py.sophus.matrix",
+        "description": "Thirdparty.Sophus.py.sophus.matrix",
+        "peekOfCode": "def unproj(v):\n    m, n = v.shape\n    assert m >= 1\n    assert n == 1\n    return v.col_join(sympy.Matrix.ones(1, 1))",
+        "detail": "Thirdparty.Sophus.py.sophus.matrix",
+        "documentation": {}
+    },
+    {
+        "label": "Quaternion",
+        "kind": 6,
+        "importPath": "Thirdparty.Sophus.py.sophus.quaternion",
+        "description": "Thirdparty.Sophus.py.sophus.quaternion",
+        "peekOfCode": "class Quaternion:\n    \"\"\" Quaternion class \"\"\"\n    def __init__(self, real, vec):\n        \"\"\" Quaternion consists of a real scalar, and an imaginary 3-vector \"\"\"\n        assert isinstance(vec, sympy.Matrix)\n        assert vec.shape == (3, 1), vec.shape\n        self.real = real\n        self.vec = vec\n    def __mul__(self, right):\n        \"\"\" quaternion multiplication \"\"\"",
+        "detail": "Thirdparty.Sophus.py.sophus.quaternion",
+        "documentation": {}
+    },
+    {
+        "label": "TestQuaternion",
+        "kind": 6,
+        "importPath": "Thirdparty.Sophus.py.sophus.quaternion",
+        "description": "Thirdparty.Sophus.py.sophus.quaternion",
+        "peekOfCode": "class TestQuaternion(unittest.TestCase):\n    def setUp(self):\n        x, u0, u1, u2 = sympy.symbols('x u0 u1 u2', real=True)\n        y, v0, v1, v2 = sympy.symbols('y v0 v1 v2', real=True)\n        u = sophus.Vector3(u0, u1, u2)\n        v = sophus.Vector3(v0, v1, v2)\n        self.a = Quaternion(x, u)\n        self.b = Quaternion(y, v)\n    def test_muliplications(self):\n        product = self.a * self.a.inv()",
+        "detail": "Thirdparty.Sophus.py.sophus.quaternion",
+        "documentation": {}
+    },
+    {
+        "label": "Se2",
+        "kind": 6,
+        "importPath": "Thirdparty.Sophus.py.sophus.se2",
+        "description": "Thirdparty.Sophus.py.sophus.se2",
+        "peekOfCode": "class Se2:\n    \"\"\" 2 dimensional group of rigid body transformations \"\"\"\n    def __init__(self, so2, t):\n        \"\"\" internally represented by a unit complex number z and a translation\n            2-vector \"\"\"\n        self.so2 = so2\n        self.t = t\n    @staticmethod\n    def exp(v):\n        \"\"\" exponential map \"\"\"",
+        "detail": "Thirdparty.Sophus.py.sophus.se2",
+        "documentation": {}
+    },
+    {
+        "label": "TestSe2",
+        "kind": 6,
+        "importPath": "Thirdparty.Sophus.py.sophus.se2",
+        "description": "Thirdparty.Sophus.py.sophus.se2",
+        "peekOfCode": "class TestSe2(unittest.TestCase):\n    def setUp(self):\n        upsilon0, upsilon1, theta = sympy.symbols(\n            'upsilon[0], upsilon[1], theta',\n            real=True)\n        x, y = sympy.symbols('c[0] c[1]', real=True)\n        p0, p1 = sympy.symbols('p0 p1', real=True)\n        t0, t1 = sympy.symbols('t[0] t[1]', real=True)\n        self.upsilon_theta = sophus.Vector3(\n            upsilon0, upsilon1, theta)",
+        "detail": "Thirdparty.Sophus.py.sophus.se2",
+        "documentation": {}
+    },
+    {
+        "label": "Se3",
+        "kind": 6,
+        "importPath": "Thirdparty.Sophus.py.sophus.se3",
+        "description": "Thirdparty.Sophus.py.sophus.se3",
+        "peekOfCode": "class Se3:\n    \"\"\" 3 dimensional group of rigid body transformations \"\"\"\n    def __init__(self, so3, t):\n        \"\"\" internally represented by a unit quaternion q and a translation\n            3-vector \"\"\"\n        assert isinstance(so3, sophus.So3)\n        assert isinstance(t, sympy.Matrix)\n        assert t.shape == (3, 1), t.shape\n        self.so3 = so3\n        self.t = t",
+        "detail": "Thirdparty.Sophus.py.sophus.se3",
+        "documentation": {}
+    },
+    {
+        "label": "TestSe3",
+        "kind": 6,
+        "importPath": "Thirdparty.Sophus.py.sophus.se3",
+        "description": "Thirdparty.Sophus.py.sophus.se3",
+        "peekOfCode": "class TestSe3(unittest.TestCase):\n    def setUp(self):\n        upsilon0, upsilon1, upsilon2, omega0, omega1, omega2 = sympy.symbols(\n            'upsilon[0], upsilon[1], upsilon[2], omega[0], omega[1], omega[2]',\n            real=True)\n        x, v0, v1, v2 = sympy.symbols('q.w() q.x() q.y() q.z()', real=True)\n        p0, p1, p2 = sympy.symbols('p0 p1 p2', real=True)\n        t0, t1, t2 = sympy.symbols('t[0] t[1] t[2]', real=True)\n        v = sophus.Vector3(v0, v1, v2)\n        self.upsilon_omega = sophus.Vector6(",
+        "detail": "Thirdparty.Sophus.py.sophus.se3",
+        "documentation": {}
+    },
+    {
+        "label": "So2",
+        "kind": 6,
+        "importPath": "Thirdparty.Sophus.py.sophus.so2",
+        "description": "Thirdparty.Sophus.py.sophus.so2",
+        "peekOfCode": "class So2:\n    \"\"\" 2 dimensional group of orthogonal matrices with determinant 1 \"\"\"\n    def __init__(self, z):\n        \"\"\" internally represented by a unit complex number z \"\"\"\n        self.z = z\n    @staticmethod\n    def exp(theta):\n        \"\"\" exponential map \"\"\"\n        return So2(\n            sophus.Complex(",
+        "detail": "Thirdparty.Sophus.py.sophus.so2",
+        "documentation": {}
+    },
+    {
+        "label": "TestSo2",
+        "kind": 6,
+        "importPath": "Thirdparty.Sophus.py.sophus.so2",
+        "description": "Thirdparty.Sophus.py.sophus.so2",
+        "peekOfCode": "class TestSo2(unittest.TestCase):\n    def setUp(self):\n        self.theta = sympy.symbols(\n            'theta', real=True)\n        x, y = sympy.symbols('c[0] c[1]', real=True)\n        p0, p1 = sympy.symbols('p0 p1', real=True)\n        self.a = So2(sophus.Complex(x, y))\n        self.p = sophus.Vector2(p0, p1)\n    def test_exp_log(self):\n        for theta in [0.,  0.5, 0.1]:",
+        "detail": "Thirdparty.Sophus.py.sophus.so2",
+        "documentation": {}
+    },
+    {
+        "label": "So3",
+        "kind": 6,
+        "importPath": "Thirdparty.Sophus.py.sophus.so3",
+        "description": "Thirdparty.Sophus.py.sophus.so3",
+        "peekOfCode": "class So3:\n    \"\"\" 3 dimensional group of orthogonal matrices with determinant 1 \"\"\"\n    def __init__(self, q):\n        \"\"\" internally represented by a unit quaternion q \"\"\"\n        self.q = q\n    @staticmethod\n    def exp(v):\n        \"\"\" exponential map \"\"\"\n        theta_sq = sophus.squared_norm(v)\n        theta = sympy.sqrt(theta_sq)",
+        "detail": "Thirdparty.Sophus.py.sophus.so3",
+        "documentation": {}
+    },
+    {
+        "label": "TestSo3",
+        "kind": 6,
+        "importPath": "Thirdparty.Sophus.py.sophus.so3",
+        "description": "Thirdparty.Sophus.py.sophus.so3",
+        "peekOfCode": "class TestSo3(unittest.TestCase):\n    def setUp(self):\n        omega0, omega1, omega2 = sympy.symbols(\n            'omega[0], omega[1], omega[2]', real=True)\n        x, v0, v1, v2 = sympy.symbols('q.w() q.x() q.y() q.z()', real=True)\n        p0, p1, p2 = sympy.symbols('p0 p1 p2', real=True)\n        v = sophus.Vector3(v0, v1, v2)\n        self.omega = sophus.Vector3(omega0, omega1, omega2)\n        self.a = So3(sophus.Quaternion(x, v))\n        self.p = sophus.Vector3(p0, p1, p2)",
+        "detail": "Thirdparty.Sophus.py.sophus.so3",
+        "documentation": {}
+    },
+    {
+        "label": "extensions",
+        "kind": 5,
+        "importPath": "Thirdparty.Sophus.rst-dir.conf",
+        "description": "Thirdparty.Sophus.rst-dir.conf",
+        "peekOfCode": "extensions = ['doxyrest', 'cpplexer', 'sphinx.ext.autodoc']\n# -- Project information -----------------------------------------------------\nproject = 'Sophus'\ncopyright = '2019, Hauke Strasdat'\nauthor = 'Hauke Strasdat'\n# Tell sphinx what the primary language being documented is.\nprimary_domain = 'cpp'\n# Tell sphinx what the pygments highlight language should be.\nhighlight_language = 'cpp'\n# Add any paths that contain templates here, relative to this directory.",
+        "detail": "Thirdparty.Sophus.rst-dir.conf",
+        "documentation": {}
+    },
+    {
+        "label": "project",
+        "kind": 5,
+        "importPath": "Thirdparty.Sophus.rst-dir.conf",
+        "description": "Thirdparty.Sophus.rst-dir.conf",
+        "peekOfCode": "project = 'Sophus'\ncopyright = '2019, Hauke Strasdat'\nauthor = 'Hauke Strasdat'\n# Tell sphinx what the primary language being documented is.\nprimary_domain = 'cpp'\n# Tell sphinx what the pygments highlight language should be.\nhighlight_language = 'cpp'\n# Add any paths that contain templates here, relative to this directory.\ntemplates_path = ['_templates']\n# List of patterns, relative to source directory, that match files and",
+        "detail": "Thirdparty.Sophus.rst-dir.conf",
+        "documentation": {}
+    },
+    {
+        "label": "copyright",
+        "kind": 5,
+        "importPath": "Thirdparty.Sophus.rst-dir.conf",
+        "description": "Thirdparty.Sophus.rst-dir.conf",
+        "peekOfCode": "copyright = '2019, Hauke Strasdat'\nauthor = 'Hauke Strasdat'\n# Tell sphinx what the primary language being documented is.\nprimary_domain = 'cpp'\n# Tell sphinx what the pygments highlight language should be.\nhighlight_language = 'cpp'\n# Add any paths that contain templates here, relative to this directory.\ntemplates_path = ['_templates']\n# List of patterns, relative to source directory, that match files and\n# directories to ignore when looking for source files.",
+        "detail": "Thirdparty.Sophus.rst-dir.conf",
+        "documentation": {}
+    },
+    {
+        "label": "author",
+        "kind": 5,
+        "importPath": "Thirdparty.Sophus.rst-dir.conf",
+        "description": "Thirdparty.Sophus.rst-dir.conf",
+        "peekOfCode": "author = 'Hauke Strasdat'\n# Tell sphinx what the primary language being documented is.\nprimary_domain = 'cpp'\n# Tell sphinx what the pygments highlight language should be.\nhighlight_language = 'cpp'\n# Add any paths that contain templates here, relative to this directory.\ntemplates_path = ['_templates']\n# List of patterns, relative to source directory, that match files and\n# directories to ignore when looking for source files.\n# This pattern also affects html_static_path and html_extra_path.",
+        "detail": "Thirdparty.Sophus.rst-dir.conf",
+        "documentation": {}
+    },
+    {
+        "label": "primary_domain",
+        "kind": 5,
+        "importPath": "Thirdparty.Sophus.rst-dir.conf",
+        "description": "Thirdparty.Sophus.rst-dir.conf",
+        "peekOfCode": "primary_domain = 'cpp'\n# Tell sphinx what the pygments highlight language should be.\nhighlight_language = 'cpp'\n# Add any paths that contain templates here, relative to this directory.\ntemplates_path = ['_templates']\n# List of patterns, relative to source directory, that match files and\n# directories to ignore when looking for source files.\n# This pattern also affects html_static_path and html_extra_path.\nexclude_patterns = []\n# -- Options for HTML output -------------------------------------------------",
+        "detail": "Thirdparty.Sophus.rst-dir.conf",
+        "documentation": {}
+    },
+    {
+        "label": "highlight_language",
+        "kind": 5,
+        "importPath": "Thirdparty.Sophus.rst-dir.conf",
+        "description": "Thirdparty.Sophus.rst-dir.conf",
+        "peekOfCode": "highlight_language = 'cpp'\n# Add any paths that contain templates here, relative to this directory.\ntemplates_path = ['_templates']\n# List of patterns, relative to source directory, that match files and\n# directories to ignore when looking for source files.\n# This pattern also affects html_static_path and html_extra_path.\nexclude_patterns = []\n# -- Options for HTML output -------------------------------------------------\n# The theme to use for HTML and HTML Help pages.  See the documentation for\n# a list of builtin themes.",
+        "detail": "Thirdparty.Sophus.rst-dir.conf",
+        "documentation": {}
+    },
+    {
+        "label": "templates_path",
+        "kind": 5,
+        "importPath": "Thirdparty.Sophus.rst-dir.conf",
+        "description": "Thirdparty.Sophus.rst-dir.conf",
+        "peekOfCode": "templates_path = ['_templates']\n# List of patterns, relative to source directory, that match files and\n# directories to ignore when looking for source files.\n# This pattern also affects html_static_path and html_extra_path.\nexclude_patterns = []\n# -- Options for HTML output -------------------------------------------------\n# The theme to use for HTML and HTML Help pages.  See the documentation for\n# a list of builtin themes.\n#\nhtml_theme = \"sphinx_rtd_theme\"",
+        "detail": "Thirdparty.Sophus.rst-dir.conf",
+        "documentation": {}
+    },
+    {
+        "label": "exclude_patterns",
+        "kind": 5,
+        "importPath": "Thirdparty.Sophus.rst-dir.conf",
+        "description": "Thirdparty.Sophus.rst-dir.conf",
+        "peekOfCode": "exclude_patterns = []\n# -- Options for HTML output -------------------------------------------------\n# The theme to use for HTML and HTML Help pages.  See the documentation for\n# a list of builtin themes.\n#\nhtml_theme = \"sphinx_rtd_theme\"\n# Add any paths that contain custom static files (such as style sheets) here,\n# relative to this directory. They are copied after the builtin static files,\n# so a file named \"default.css\" will overwrite the builtin \"default.css\".\nhtml_static_path = ['_static']",
+        "detail": "Thirdparty.Sophus.rst-dir.conf",
+        "documentation": {}
+    },
+    {
+        "label": "html_theme",
+        "kind": 5,
+        "importPath": "Thirdparty.Sophus.rst-dir.conf",
+        "description": "Thirdparty.Sophus.rst-dir.conf",
+        "peekOfCode": "html_theme = \"sphinx_rtd_theme\"\n# Add any paths that contain custom static files (such as style sheets) here,\n# relative to this directory. They are copied after the builtin static files,\n# so a file named \"default.css\" will overwrite the builtin \"default.css\".\nhtml_static_path = ['_static']",
+        "detail": "Thirdparty.Sophus.rst-dir.conf",
+        "documentation": {}
+    },
+    {
+        "label": "html_static_path",
+        "kind": 5,
+        "importPath": "Thirdparty.Sophus.rst-dir.conf",
+        "description": "Thirdparty.Sophus.rst-dir.conf",
+        "peekOfCode": "html_static_path = ['_static']",
+        "detail": "Thirdparty.Sophus.rst-dir.conf",
+        "documentation": {}
+    },
+    {
+        "label": "evaluate",
+        "kind": 2,
+        "importPath": "evaluation.harness.evaluate",
+        "description": "evaluation.harness.evaluate",
+        "peekOfCode": "def evaluate(est_path, gt_path, est_format, gt_format, align=\"se3\",\n             max_diff=0.02, offset=0.0, kitti=False):\n    est_stamps, est_poses = traj_io.load(est_path, est_format)\n    gt_stamps, gt_poses = traj_io.load(gt_path, gt_format)\n    ia, ib = traj_io.associate(est_stamps, gt_stamps, max_diff=max_diff, offset=offset)\n    if len(ia) < 3:\n        raise ValueError(\n            \"only %d pose pairs associated (est %d poses spanning %.1f s, gt %d poses \"\n            \"spanning %.1f s, max_diff %.3f s) -- check the timestamp units and that \"\n            \"the trajectory is not from a different sequence\"",
+        "detail": "evaluation.harness.evaluate",
+        "documentation": {}
+    },
+    {
+        "label": "format_report",
+        "kind": 2,
+        "importPath": "evaluation.harness.evaluate",
+        "description": "evaluation.harness.evaluate",
+        "peekOfCode": "def format_report(r):\n    a = r[\"ate\"]\n    lines = [\n        \"trajectory : %s\" % r[\"est\"],\n        \"ground truth: %s\" % r[\"gt\"],\n        \"associated : %d pairs  (%.1f%% of ground truth; %d estimated poses)\"\n        % (a[\"n\"], 100.0 * r[\"coverage\"], r[\"est_poses\"]),\n        \"alignment  : %s%s\" % (a[\"align\"],\n                               (\"  (scale=%.6f)\" % a[\"scale\"]) if a[\"align\"] == \"sim3\" else \"\"),\n        \"\",",
+        "detail": "evaluation.harness.evaluate",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "evaluation.harness.evaluate",
+        "description": "evaluation.harness.evaluate",
+        "peekOfCode": "def main():\n    p = argparse.ArgumentParser(description=__doc__,\n                                formatter_class=argparse.RawDescriptionHelpFormatter)\n    p.add_argument(\"--est\", required=True)\n    p.add_argument(\"--gt\", required=True)\n    p.add_argument(\"--est-format\", required=True, choices=sorted(traj_io.LOADERS))\n    p.add_argument(\"--gt-format\", required=True, choices=sorted(traj_io.LOADERS))\n    p.add_argument(\"--align\", default=\"se3\", choices=[\"se3\", \"sim3\"],\n                   help=\"se3 for stereo/RGB-D/inertial (default), sim3 only for monocular\")\n    p.add_argument(\"--max-diff\", type=float, default=0.02,",
+        "detail": "evaluation.harness.evaluate",
+        "documentation": {}
+    },
+    {
+        "label": "read_file_list",
+        "kind": 2,
+        "importPath": "evaluation.harness.make_tum_associations",
+        "description": "evaluation.harness.make_tum_associations",
+        "peekOfCode": "def read_file_list(path):\n    entries = []\n    with open(path) as fh:\n        for line in fh:\n            line = line.strip()\n            if not line or line[0] == \"#\":\n                continue\n            parts = line.split()\n            if len(parts) >= 2:\n                entries.append((float(parts[0]), parts[1]))",
+        "detail": "evaluation.harness.make_tum_associations",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "evaluation.harness.make_tum_associations",
+        "description": "evaluation.harness.make_tum_associations",
+        "peekOfCode": "def main():\n    p = argparse.ArgumentParser(description=__doc__,\n                                formatter_class=argparse.RawDescriptionHelpFormatter)\n    p.add_argument(\"sequence\", help=\"TUM RGB-D sequence folder (contains rgb.txt, depth.txt)\")\n    p.add_argument(\"--max-diff\", type=float, default=0.02,\n                   help=\"max rgb/depth timestamp difference in seconds (default 0.02)\")\n    a = p.parse_args()\n    rgb_path = os.path.join(a.sequence, \"rgb.txt\")\n    depth_path = os.path.join(a.sequence, \"depth.txt\")\n    for f in (rgb_path, depth_path):",
+        "detail": "evaluation.harness.make_tum_associations",
+        "documentation": {}
+    },
+    {
+        "label": "umeyama",
+        "kind": 2,
+        "importPath": "evaluation.harness.metrics",
+        "description": "evaluation.harness.metrics",
+        "peekOfCode": "def umeyama(src, dst, with_scale=False):\n    \"\"\"Least-squares similarity transform mapping src onto dst.\n    src, dst: (N,3). Returns (R, t, s) minimising ||s*R*src_i + t - dst_i||^2.\n    With with_scale=False the scale is fixed at 1, i.e. a rigid SE(3) alignment.\n    \"\"\"\n    src = np.asarray(src, dtype=np.float64)\n    dst = np.asarray(dst, dtype=np.float64)\n    n = len(src)\n    mu_src, mu_dst = src.mean(axis=0), dst.mean(axis=0)\n    sc, dc = src - mu_src, dst - mu_dst",
+        "detail": "evaluation.harness.metrics",
+        "documentation": {}
+    },
+    {
+        "label": "ate",
+        "kind": 2,
+        "importPath": "evaluation.harness.metrics",
+        "description": "evaluation.harness.metrics",
+        "peekOfCode": "def ate(est_poses, gt_poses, align=\"se3\"):\n    \"\"\"Absolute trajectory error between associated pose arrays.\n    est_poses, gt_poses: (N,4,4), already associated one-to-one.\n    align: \"se3\" (rigid, scale fixed to 1) or \"sim3\" (solves for scale, monocular).\n    Returns a dict with rmse/mean/median/std/min/max of the translation error in\n    metres, the recovered scale, and the pose count.\n    \"\"\"\n    if align not in (\"se3\", \"sim3\"):\n        raise ValueError(\"align must be 'se3' or 'sim3', got %r\" % align)\n    if len(est_poses) != len(gt_poses):",
+        "detail": "evaluation.harness.metrics",
+        "documentation": {}
+    },
+    {
+        "label": "kitti_relative",
+        "kind": 2,
+        "importPath": "evaluation.harness.metrics",
+        "description": "evaluation.harness.metrics",
+        "peekOfCode": "def kitti_relative(est_poses, gt_poses, lengths=(100, 200, 300, 400, 500, 600, 700, 800),\n                   step=10):\n    \"\"\"KITTI odometry metrics: translation error [%] and rotation error [deg/m].\n    Reimplements the official devkit: for every step-th start frame and every\n    segment length, compare the relative pose over that segment and normalise by\n    the segment length. This is the metric KITTI is actually scored on -- ATE in\n    metres on a 3 km sequence is dominated by a single far-end drift and is not\n    what the ORB-SLAM2/3 papers report for this dataset.\n    Faithful to the devkit, including its discretisation bias: the segment ends at\n    the first frame *past* the nominal length but the error is normalised by the",
+        "detail": "evaluation.harness.metrics",
+        "documentation": {}
+    },
+    {
+        "label": "aggregate",
+        "kind": 2,
+        "importPath": "evaluation.harness.metrics",
+        "description": "evaluation.harness.metrics",
+        "peekOfCode": "def aggregate(values):\n    \"\"\"Summarise a metric across N runs. Median is the headline, not the mean.\n    ORB-SLAM3 is multi-threaded and non-deterministic; the run-to-run spread on\n    EuRoC is comparable to the differences the thesis reports as improvements.\n    The ORB-SLAM3 paper reports the median of 10 executions for this reason.\n    \"\"\"\n    v = np.asarray([x for x in values if x is not None and np.isfinite(x)], dtype=np.float64)\n    if len(v) == 0:\n        return {\"median\": None, \"mean\": None, \"std\": None, \"min\": None,\n                \"max\": None, \"n\": 0}",
+        "detail": "evaluation.harness.metrics",
+        "documentation": {}
+    },
+    {
+        "label": "rpath",
+        "kind": 2,
+        "importPath": "evaluation.harness.run_benchmark",
+        "description": "evaluation.harness.run_benchmark",
+        "peekOfCode": "def rpath(p):\n    \"\"\"Resolve a path from sequences.yaml against the repo root.\"\"\"\n    p = os.path.expanduser(str(p))\n    return p if os.path.isabs(p) else os.path.join(REPO, p)\ndef load_registry(path=None):\n    with open(path or os.path.join(HERE, \"sequences.yaml\")) as fh:\n        return yaml.safe_load(fh)\ndef build_invocation(cfg_name, cfg, seq_name, seq, reg, run_tag):\n    \"\"\"Return (argv, output_map) where output_map maps kind -> filename in cwd.\"\"\"\n    vocab = rpath(reg[\"vocabulary\"])",
+        "detail": "evaluation.harness.run_benchmark",
+        "documentation": {}
+    },
+    {
+        "label": "load_registry",
+        "kind": 2,
+        "importPath": "evaluation.harness.run_benchmark",
+        "description": "evaluation.harness.run_benchmark",
+        "peekOfCode": "def load_registry(path=None):\n    with open(path or os.path.join(HERE, \"sequences.yaml\")) as fh:\n        return yaml.safe_load(fh)\ndef build_invocation(cfg_name, cfg, seq_name, seq, reg, run_tag):\n    \"\"\"Return (argv, output_map) where output_map maps kind -> filename in cwd.\"\"\"\n    vocab = rpath(reg[\"vocabulary\"])\n    root = rpath(reg[\"roots\"][cfg[\"dataset\"]])\n    seq_dir = os.path.join(root, seq[\"folder\"])\n    settings = rpath(seq.get(\"settings\", cfg.get(\"settings\")))\n    if cfg[\"dataset\"] == \"euroc\":",
+        "detail": "evaluation.harness.run_benchmark",
+        "documentation": {}
+    },
+    {
+        "label": "build_invocation",
+        "kind": 2,
+        "importPath": "evaluation.harness.run_benchmark",
+        "description": "evaluation.harness.run_benchmark",
+        "peekOfCode": "def build_invocation(cfg_name, cfg, seq_name, seq, reg, run_tag):\n    \"\"\"Return (argv, output_map) where output_map maps kind -> filename in cwd.\"\"\"\n    vocab = rpath(reg[\"vocabulary\"])\n    root = rpath(reg[\"roots\"][cfg[\"dataset\"]])\n    seq_dir = os.path.join(root, seq[\"folder\"])\n    settings = rpath(seq.get(\"settings\", cfg.get(\"settings\")))\n    if cfg[\"dataset\"] == \"euroc\":\n        times = os.path.join(rpath(cfg[\"timestamps_dir\"]), seq[\"times\"])\n        argv = [rpath(cfg[\"binary\"]), vocab, settings, seq_dir, times, run_tag]\n        outputs = {\"frames\": \"f_%s.txt\" % run_tag, \"keyframes\": \"kf_%s.txt\" % run_tag}",
+        "detail": "evaluation.harness.run_benchmark",
+        "documentation": {}
+    },
+    {
+        "label": "resolve_gt",
+        "kind": 2,
+        "importPath": "evaluation.harness.run_benchmark",
+        "description": "evaluation.harness.run_benchmark",
+        "peekOfCode": "def resolve_gt(cfg, seq, seq_dir, reg):\n    if \"gt_from_sequence\" in cfg:\n        return os.path.join(seq_dir, cfg[\"gt_from_sequence\"])\n    root = rpath(reg[\"roots\"][cfg[\"dataset\"]])\n    tmpl = cfg.get(\"gt_template\", \"{gt}\")\n    rel = tmpl.format(gt=seq[\"gt\"])\n    if \"gt_dir\" in cfg:\n        return os.path.join(rpath(cfg[\"gt_dir\"]), rel)\n    return os.path.join(root, rel)\ndef run_one(argv, cwd, log_path, timeout):",
+        "detail": "evaluation.harness.run_benchmark",
+        "documentation": {}
+    },
+    {
+        "label": "run_one",
+        "kind": 2,
+        "importPath": "evaluation.harness.run_benchmark",
+        "description": "evaluation.harness.run_benchmark",
+        "peekOfCode": "def run_one(argv, cwd, log_path, timeout):\n    t0 = time.time()\n    with open(log_path, \"w\") as log:\n        try:\n            rc = subprocess.call(argv, cwd=cwd, stdout=log, stderr=subprocess.STDOUT,\n                                 timeout=timeout)\n        except subprocess.TimeoutExpired:\n            log.write(\"\\n*** TIMEOUT after %s s ***\\n\" % timeout)\n            rc = -9\n        except OSError as exc:",
+        "detail": "evaluation.harness.run_benchmark",
+        "documentation": {}
+    },
+    {
+        "label": "benchmark",
+        "kind": 2,
+        "importPath": "evaluation.harness.run_benchmark",
+        "description": "evaluation.harness.run_benchmark",
+        "peekOfCode": "def benchmark(args):\n    reg = load_registry(args.registry)\n    cfg_name = args.config\n    if cfg_name not in reg[\"configs\"]:\n        sys.exit(\"unknown config %r (known: %s)\" % (cfg_name, \", \".join(reg[\"configs\"])))\n    cfg = reg[\"configs\"][cfg_name]\n    all_seqs = reg[\"sequences\"][cfg_name]\n    names = args.sequences.split(\",\") if args.sequences else list(all_seqs)\n    for n in names:\n        if n not in all_seqs:",
+        "detail": "evaluation.harness.run_benchmark",
+        "documentation": {}
+    },
+    {
+        "label": "render_table",
+        "kind": 2,
+        "importPath": "evaluation.harness.run_benchmark",
+        "description": "evaluation.harness.run_benchmark",
+        "peekOfCode": "def render_table(report, reg=None):\n    cfg_name = report[\"config\"]\n    kitti = any(\"t_rel_pct\" in s for s in report[\"sequences\"].values())\n    lines = [\n        \"## %s  (tag: %s)\" % (cfg_name, report[\"tag\"]),\n        \"\",\n        \"- runs per sequence: **%d**, reported as median\" % report[\"runs\"],\n        \"- trajectory: `%s`, alignment: `%s`, sensor: `%s`\"\n        % (report[\"trajectory\"], report[\"align\"], report[\"sensor\"]),\n        \"- host: %s logical CPUs, started %s\" % (report[\"host_cpu_count\"], report[\"started\"]),",
+        "detail": "evaluation.harness.run_benchmark",
+        "documentation": {}
+    },
+    {
+        "label": "compare",
+        "kind": 2,
+        "importPath": "evaluation.harness.run_benchmark",
+        "description": "evaluation.harness.run_benchmark",
+        "peekOfCode": "def compare(paths):\n    reports = []\n    for p in paths:\n        f = os.path.join(rpath(p), \"results.json\")\n        if not os.path.exists(f):\n            sys.exit(\"no results.json in %s\" % p)\n        reports.append(json.load(open(f)))\n    names = []\n    for r in reports:\n        for n in r[\"sequences\"]:",
+        "detail": "evaluation.harness.run_benchmark",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "evaluation.harness.run_benchmark",
+        "description": "evaluation.harness.run_benchmark",
+        "peekOfCode": "def main():\n    p = argparse.ArgumentParser(description=__doc__,\n                                formatter_class=argparse.RawDescriptionHelpFormatter)\n    p.add_argument(\"--config\", help=\"config name from sequences.yaml\")\n    p.add_argument(\"--sequences\", help=\"comma separated subset (default: all)\")\n    p.add_argument(\"--runs\", type=int, default=10,\n                   help=\"executions per sequence (default 10; the thesis used 3)\")\n    p.add_argument(\"--trajectory\", default=\"frames\", choices=[\"frames\", \"keyframes\"],\n                   help=\"score the full-frame or the keyframe trajectory (default frames)\")\n    p.add_argument(\"--tag\", help=\"name for this result set (default: config name)\")",
+        "detail": "evaluation.harness.run_benchmark",
+        "documentation": {}
+    },
+    {
+        "label": "HERE",
+        "kind": 5,
+        "importPath": "evaluation.harness.run_benchmark",
+        "description": "evaluation.harness.run_benchmark",
+        "peekOfCode": "HERE = os.path.dirname(os.path.abspath(__file__))\nREPO = os.path.abspath(os.path.join(HERE, \"..\", \"..\"))\ndef rpath(p):\n    \"\"\"Resolve a path from sequences.yaml against the repo root.\"\"\"\n    p = os.path.expanduser(str(p))\n    return p if os.path.isabs(p) else os.path.join(REPO, p)\ndef load_registry(path=None):\n    with open(path or os.path.join(HERE, \"sequences.yaml\")) as fh:\n        return yaml.safe_load(fh)\ndef build_invocation(cfg_name, cfg, seq_name, seq, reg, run_tag):",
+        "detail": "evaluation.harness.run_benchmark",
+        "documentation": {}
+    },
+    {
+        "label": "REPO",
+        "kind": 5,
+        "importPath": "evaluation.harness.run_benchmark",
+        "description": "evaluation.harness.run_benchmark",
+        "peekOfCode": "REPO = os.path.abspath(os.path.join(HERE, \"..\", \"..\"))\ndef rpath(p):\n    \"\"\"Resolve a path from sequences.yaml against the repo root.\"\"\"\n    p = os.path.expanduser(str(p))\n    return p if os.path.isabs(p) else os.path.join(REPO, p)\ndef load_registry(path=None):\n    with open(path or os.path.join(HERE, \"sequences.yaml\")) as fh:\n        return yaml.safe_load(fh)\ndef build_invocation(cfg_name, cfg, seq_name, seq, reg, run_tag):\n    \"\"\"Return (argv, output_map) where output_map maps kind -> filename in cwd.\"\"\"",
+        "detail": "evaluation.harness.run_benchmark",
+        "documentation": {}
+    },
+    {
+        "label": "check",
+        "kind": 2,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "def check(name, cond, detail=\"\"):\n    status = \"PASS\" if cond else \"FAIL\"\n    print(\"  [%s] %s%s\" % (status, name, (\"  -- \" + detail) if detail else \"\"))\n    if not cond:\n        FAILED.append(name)\ndef rot_z(a):\n    c, s = np.cos(a), np.sin(a)\n    return np.array([[c, -s, 0.0], [s, c, 0.0], [0.0, 0.0, 1.0]])\ndef make_traj(n=500, radius=3.0, turns=1.5):\n    \"\"\"Helix-ish trajectory with non-trivial rotation at every pose.\"\"\"",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "rot_z",
+        "kind": 2,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "def rot_z(a):\n    c, s = np.cos(a), np.sin(a)\n    return np.array([[c, -s, 0.0], [s, c, 0.0], [0.0, 0.0, 1.0]])\ndef make_traj(n=500, radius=3.0, turns=1.5):\n    \"\"\"Helix-ish trajectory with non-trivial rotation at every pose.\"\"\"\n    t = np.linspace(0.0, turns * 2 * np.pi, n)\n    xyz = np.column_stack([radius * np.cos(t), radius * np.sin(t), 0.3 * t])\n    poses = np.tile(np.eye(4), (n, 1, 1))\n    poses[:, :3, 3] = xyz\n    for i in range(n):",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "make_traj",
+        "kind": 2,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "def make_traj(n=500, radius=3.0, turns=1.5):\n    \"\"\"Helix-ish trajectory with non-trivial rotation at every pose.\"\"\"\n    t = np.linspace(0.0, turns * 2 * np.pi, n)\n    xyz = np.column_stack([radius * np.cos(t), radius * np.sin(t), 0.3 * t])\n    poses = np.tile(np.eye(4), (n, 1, 1))\n    poses[:, :3, 3] = xyz\n    for i in range(n):\n        poses[i, :3, :3] = rot_z(t[i])\n    stamps = np.arange(n) * 0.05\n    return stamps, poses",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "apply_sim3",
+        "kind": 2,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "def apply_sim3(poses, rot, trans, scale):\n    out = poses.copy()\n    out[:, :3, 3] = (scale * (rot @ poses[:, :3, 3].T)).T + trans\n    for i in range(len(poses)):\n        out[i, :3, :3] = rot @ poses[i, :3, :3]\n    return out\nprint(\"== alignment ==\")\n_, gt = make_traj()\n# A rigid transform of the trajectory must be fully absorbed by SE(3) alignment.\nR = rot_z(0.7)",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "FAILED",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "FAILED = []\ndef check(name, cond, detail=\"\"):\n    status = \"PASS\" if cond else \"FAIL\"\n    print(\"  [%s] %s%s\" % (status, name, (\"  -- \" + detail) if detail else \"\"))\n    if not cond:\n        FAILED.append(name)\ndef rot_z(a):\n    c, s = np.cos(a), np.sin(a)\n    return np.array([[c, -s, 0.0], [s, c, 0.0], [0.0, 0.0, 1.0]])\ndef make_traj(n=500, radius=3.0, turns=1.5):",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "R",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "R = rot_z(0.7)\nt = np.array([12.0, -4.0, 2.5])\nest = apply_sim3(gt, R, t, 1.0)\nr = metrics.ate(est, gt, align=\"se3\")\ncheck(\"SE3 recovers a rigid transform exactly\", r[\"rmse\"] < 1e-9,\n      \"rmse=%.3e m\" % r[\"rmse\"])\n# A scaled trajectory: Sim(3) must recover the scale, SE(3) must NOT hide it.\nest_scaled = apply_sim3(gt, R, t, 1.30)\nr_sim3 = metrics.ate(est_scaled, gt, align=\"sim3\")\nr_se3 = metrics.ate(est_scaled, gt, align=\"se3\")",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "t",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "t = np.array([12.0, -4.0, 2.5])\nest = apply_sim3(gt, R, t, 1.0)\nr = metrics.ate(est, gt, align=\"se3\")\ncheck(\"SE3 recovers a rigid transform exactly\", r[\"rmse\"] < 1e-9,\n      \"rmse=%.3e m\" % r[\"rmse\"])\n# A scaled trajectory: Sim(3) must recover the scale, SE(3) must NOT hide it.\nest_scaled = apply_sim3(gt, R, t, 1.30)\nr_sim3 = metrics.ate(est_scaled, gt, align=\"sim3\")\nr_se3 = metrics.ate(est_scaled, gt, align=\"se3\")\ncheck(\"Sim3 recovers the scale factor\", abs(r_sim3[\"scale\"] - 1.0 / 1.30) < 1e-9,",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "est",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "est = apply_sim3(gt, R, t, 1.0)\nr = metrics.ate(est, gt, align=\"se3\")\ncheck(\"SE3 recovers a rigid transform exactly\", r[\"rmse\"] < 1e-9,\n      \"rmse=%.3e m\" % r[\"rmse\"])\n# A scaled trajectory: Sim(3) must recover the scale, SE(3) must NOT hide it.\nest_scaled = apply_sim3(gt, R, t, 1.30)\nr_sim3 = metrics.ate(est_scaled, gt, align=\"sim3\")\nr_se3 = metrics.ate(est_scaled, gt, align=\"se3\")\ncheck(\"Sim3 recovers the scale factor\", abs(r_sim3[\"scale\"] - 1.0 / 1.30) < 1e-9,\n      \"recovered s=%.6f, expected %.6f\" % (r_sim3[\"scale\"], 1.0 / 1.30))",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "r",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "r = metrics.ate(est, gt, align=\"se3\")\ncheck(\"SE3 recovers a rigid transform exactly\", r[\"rmse\"] < 1e-9,\n      \"rmse=%.3e m\" % r[\"rmse\"])\n# A scaled trajectory: Sim(3) must recover the scale, SE(3) must NOT hide it.\nest_scaled = apply_sim3(gt, R, t, 1.30)\nr_sim3 = metrics.ate(est_scaled, gt, align=\"sim3\")\nr_se3 = metrics.ate(est_scaled, gt, align=\"se3\")\ncheck(\"Sim3 recovers the scale factor\", abs(r_sim3[\"scale\"] - 1.0 / 1.30) < 1e-9,\n      \"recovered s=%.6f, expected %.6f\" % (r_sim3[\"scale\"], 1.0 / 1.30))\ncheck(\"Sim3 rmse ~0 on a purely scaled trajectory\", r_sim3[\"rmse\"] < 1e-9,",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "est_scaled",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "est_scaled = apply_sim3(gt, R, t, 1.30)\nr_sim3 = metrics.ate(est_scaled, gt, align=\"sim3\")\nr_se3 = metrics.ate(est_scaled, gt, align=\"se3\")\ncheck(\"Sim3 recovers the scale factor\", abs(r_sim3[\"scale\"] - 1.0 / 1.30) < 1e-9,\n      \"recovered s=%.6f, expected %.6f\" % (r_sim3[\"scale\"], 1.0 / 1.30))\ncheck(\"Sim3 rmse ~0 on a purely scaled trajectory\", r_sim3[\"rmse\"] < 1e-9,\n      \"rmse=%.3e m\" % r_sim3[\"rmse\"])\ncheck(\"SE3 exposes scale error instead of absorbing it\", r_se3[\"rmse\"] > 0.5,\n      \"rmse=%.4f m (this is the number stereo/RGB-D must report)\" % r_se3[\"rmse\"])\ncheck(\"SE3 pins scale at exactly 1\", r_se3[\"scale\"] == 1.0)",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "r_sim3",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "r_sim3 = metrics.ate(est_scaled, gt, align=\"sim3\")\nr_se3 = metrics.ate(est_scaled, gt, align=\"se3\")\ncheck(\"Sim3 recovers the scale factor\", abs(r_sim3[\"scale\"] - 1.0 / 1.30) < 1e-9,\n      \"recovered s=%.6f, expected %.6f\" % (r_sim3[\"scale\"], 1.0 / 1.30))\ncheck(\"Sim3 rmse ~0 on a purely scaled trajectory\", r_sim3[\"rmse\"] < 1e-9,\n      \"rmse=%.3e m\" % r_sim3[\"rmse\"])\ncheck(\"SE3 exposes scale error instead of absorbing it\", r_se3[\"rmse\"] > 0.5,\n      \"rmse=%.4f m (this is the number stereo/RGB-D must report)\" % r_se3[\"rmse\"])\ncheck(\"SE3 pins scale at exactly 1\", r_se3[\"scale\"] == 1.0)\n# Known zero-mean perturbation: RMSE must match the injected magnitude.",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "r_se3",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "r_se3 = metrics.ate(est_scaled, gt, align=\"se3\")\ncheck(\"Sim3 recovers the scale factor\", abs(r_sim3[\"scale\"] - 1.0 / 1.30) < 1e-9,\n      \"recovered s=%.6f, expected %.6f\" % (r_sim3[\"scale\"], 1.0 / 1.30))\ncheck(\"Sim3 rmse ~0 on a purely scaled trajectory\", r_sim3[\"rmse\"] < 1e-9,\n      \"rmse=%.3e m\" % r_sim3[\"rmse\"])\ncheck(\"SE3 exposes scale error instead of absorbing it\", r_se3[\"rmse\"] > 0.5,\n      \"rmse=%.4f m (this is the number stereo/RGB-D must report)\" % r_se3[\"rmse\"])\ncheck(\"SE3 pins scale at exactly 1\", r_se3[\"scale\"] == 1.0)\n# Known zero-mean perturbation: RMSE must match the injected magnitude.\nrng = np.random.default_rng(0)",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "rng",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "rng = np.random.default_rng(0)\nnoise = rng.normal(0.0, 0.05, size=(len(gt), 3))\nnoise -= noise.mean(axis=0)\nest_noisy = gt.copy()\nest_noisy[:, :3, 3] += noise\nexpected = float(np.sqrt((noise ** 2).sum(axis=1).mean()))\nr = metrics.ate(est_noisy, gt, align=\"se3\")\ncheck(\"rmse matches injected perturbation\", abs(r[\"rmse\"] - expected) < 0.01 * expected,\n      \"got %.6f, expected %.6f\" % (r[\"rmse\"], expected))\nprint(\"== quaternion conventions ==\")",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "noise",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "noise = rng.normal(0.0, 0.05, size=(len(gt), 3))\nnoise -= noise.mean(axis=0)\nest_noisy = gt.copy()\nest_noisy[:, :3, 3] += noise\nexpected = float(np.sqrt((noise ** 2).sum(axis=1).mean()))\nr = metrics.ate(est_noisy, gt, align=\"se3\")\ncheck(\"rmse matches injected perturbation\", abs(r[\"rmse\"] - expected) < 0.01 * expected,\n      \"got %.6f, expected %.6f\" % (r[\"rmse\"], expected))\nprint(\"== quaternion conventions ==\")\n# ORB-SLAM3 writes (qx,qy,qz,qw); EuRoC ground truth uses (qw,qx,qy,qz).",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "est_noisy",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "est_noisy = gt.copy()\nest_noisy[:, :3, 3] += noise\nexpected = float(np.sqrt((noise ** 2).sum(axis=1).mean()))\nr = metrics.ate(est_noisy, gt, align=\"se3\")\ncheck(\"rmse matches injected perturbation\", abs(r[\"rmse\"] - expected) < 0.01 * expected,\n      \"got %.6f, expected %.6f\" % (r[\"rmse\"], expected))\nprint(\"== quaternion conventions ==\")\n# ORB-SLAM3 writes (qx,qy,qz,qw); EuRoC ground truth uses (qw,qx,qy,qz).\nang = 0.9\nRz = rot_z(ang)",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "expected",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "expected = float(np.sqrt((noise ** 2).sum(axis=1).mean()))\nr = metrics.ate(est_noisy, gt, align=\"se3\")\ncheck(\"rmse matches injected perturbation\", abs(r[\"rmse\"] - expected) < 0.01 * expected,\n      \"got %.6f, expected %.6f\" % (r[\"rmse\"], expected))\nprint(\"== quaternion conventions ==\")\n# ORB-SLAM3 writes (qx,qy,qz,qw); EuRoC ground truth uses (qw,qx,qy,qz).\nang = 0.9\nRz = rot_z(ang)\nqw, qz = np.cos(ang / 2), np.sin(ang / 2)\ntmp = tempfile.mkdtemp()",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "r",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "r = metrics.ate(est_noisy, gt, align=\"se3\")\ncheck(\"rmse matches injected perturbation\", abs(r[\"rmse\"] - expected) < 0.01 * expected,\n      \"got %.6f, expected %.6f\" % (r[\"rmse\"], expected))\nprint(\"== quaternion conventions ==\")\n# ORB-SLAM3 writes (qx,qy,qz,qw); EuRoC ground truth uses (qw,qx,qy,qz).\nang = 0.9\nRz = rot_z(ang)\nqw, qz = np.cos(ang / 2), np.sin(ang / 2)\ntmp = tempfile.mkdtemp()\norb_file = os.path.join(tmp, \"f_test.txt\")",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "ang",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "ang = 0.9\nRz = rot_z(ang)\nqw, qz = np.cos(ang / 2), np.sin(ang / 2)\ntmp = tempfile.mkdtemp()\norb_file = os.path.join(tmp, \"f_test.txt\")\nwith open(orb_file, \"w\") as fh:  # ns timestamps, xyzw\n    fh.write(\"1403715888384058112.0 1.0 2.0 3.0 0.0 0.0 %.17g %.17g\\n\" % (qz, qw))\n    fh.write(\"1403715888434057984.0 1.1 2.0 3.0 0.0 0.0 %.17g %.17g\\n\" % (qz, qw))\n    fh.write(\"1403715888484057984.0 1.2 2.0 3.0 0.0 0.0 %.17g %.17g\\n\" % (qz, qw))\ns_orb, p_orb = traj_io.load_orb_euroc(orb_file)",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "Rz",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "Rz = rot_z(ang)\nqw, qz = np.cos(ang / 2), np.sin(ang / 2)\ntmp = tempfile.mkdtemp()\norb_file = os.path.join(tmp, \"f_test.txt\")\nwith open(orb_file, \"w\") as fh:  # ns timestamps, xyzw\n    fh.write(\"1403715888384058112.0 1.0 2.0 3.0 0.0 0.0 %.17g %.17g\\n\" % (qz, qw))\n    fh.write(\"1403715888434057984.0 1.1 2.0 3.0 0.0 0.0 %.17g %.17g\\n\" % (qz, qw))\n    fh.write(\"1403715888484057984.0 1.2 2.0 3.0 0.0 0.0 %.17g %.17g\\n\" % (qz, qw))\ns_orb, p_orb = traj_io.load_orb_euroc(orb_file)\ncheck(\"ORB EuRoC ns timestamps -> seconds\", abs(s_orb[0] - 1403715888.384058) < 1e-5,",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "tmp",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "tmp = tempfile.mkdtemp()\norb_file = os.path.join(tmp, \"f_test.txt\")\nwith open(orb_file, \"w\") as fh:  # ns timestamps, xyzw\n    fh.write(\"1403715888384058112.0 1.0 2.0 3.0 0.0 0.0 %.17g %.17g\\n\" % (qz, qw))\n    fh.write(\"1403715888434057984.0 1.1 2.0 3.0 0.0 0.0 %.17g %.17g\\n\" % (qz, qw))\n    fh.write(\"1403715888484057984.0 1.2 2.0 3.0 0.0 0.0 %.17g %.17g\\n\" % (qz, qw))\ns_orb, p_orb = traj_io.load_orb_euroc(orb_file)\ncheck(\"ORB EuRoC ns timestamps -> seconds\", abs(s_orb[0] - 1403715888.384058) < 1e-5,\n      \"t0=%.6f s\" % s_orb[0])\ncheck(\"ORB EuRoC quaternion read as xyzw\", np.allclose(p_orb[0, :3, :3], Rz, atol=1e-12))",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "orb_file",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "orb_file = os.path.join(tmp, \"f_test.txt\")\nwith open(orb_file, \"w\") as fh:  # ns timestamps, xyzw\n    fh.write(\"1403715888384058112.0 1.0 2.0 3.0 0.0 0.0 %.17g %.17g\\n\" % (qz, qw))\n    fh.write(\"1403715888434057984.0 1.1 2.0 3.0 0.0 0.0 %.17g %.17g\\n\" % (qz, qw))\n    fh.write(\"1403715888484057984.0 1.2 2.0 3.0 0.0 0.0 %.17g %.17g\\n\" % (qz, qw))\ns_orb, p_orb = traj_io.load_orb_euroc(orb_file)\ncheck(\"ORB EuRoC ns timestamps -> seconds\", abs(s_orb[0] - 1403715888.384058) < 1e-5,\n      \"t0=%.6f s\" % s_orb[0])\ncheck(\"ORB EuRoC quaternion read as xyzw\", np.allclose(p_orb[0, :3, :3], Rz, atol=1e-12))\ngt_file = os.path.join(tmp, \"gt_test.txt\")",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "gt_file",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "gt_file = os.path.join(tmp, \"gt_test.txt\")\nwith open(gt_file, \"w\") as fh:  # ns timestamps, wxyz, comma separated, ASL header\n    fh.write(\"#timestamp [ns],p_RS_R_x [m],p_RS_R_y [m],p_RS_R_z [m],q_RS_w [],q_RS_x [],q_RS_y [],q_RS_z []\\n\")\n    fh.write(\"1403715888384058112.0000000000,1.0,2.0,3.0,%.17g,0.0,0.0,%.17g\\n\" % (qw, qz))\n    fh.write(\"1403715888434057984.0000000000,1.1,2.0,3.0,%.17g,0.0,0.0,%.17g\\n\" % (qw, qz))\ns_gt, p_gt = traj_io.load_euroc_gt(gt_file)\ncheck(\"EuRoC GT quaternion read as wxyz\", np.allclose(p_gt[0, :3, :3], Rz, atol=1e-12))\ncheck(\"both conventions land on the same rotation\",\n      np.allclose(p_orb[0, :3, :3], p_gt[0, :3, :3], atol=1e-12),\n      \"a swapped order here would silently rotate the whole trajectory\")",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "n",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "n = 1001\nstraight = np.tile(np.eye(4), (n, 1, 1))\nstraight[:, 0, 3] = np.arange(n, dtype=np.float64)  # 1 m steps along x, 1000 m total\nscaled = straight.copy()\nscaled[:, :3, 3] *= 1.05  # 5 % scale drift\nk = metrics.kitti_relative(scaled, straight, lengths=(100, 200, 300, 400))\n# The devkit overshoots each segment by up to one frame spacing and normalises by\n# the nominal length, so the recovered value sits a hair above 5 %. See the\n# convergence check below: the bias is discretisation, not a maths error.\ncheck(\"t_rel recovers a 5% scale drift\", abs(k[\"t_rel_pct\"] - 5.0) < 0.05,",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "straight",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "straight = np.tile(np.eye(4), (n, 1, 1))\nstraight[:, 0, 3] = np.arange(n, dtype=np.float64)  # 1 m steps along x, 1000 m total\nscaled = straight.copy()\nscaled[:, :3, 3] *= 1.05  # 5 % scale drift\nk = metrics.kitti_relative(scaled, straight, lengths=(100, 200, 300, 400))\n# The devkit overshoots each segment by up to one frame spacing and normalises by\n# the nominal length, so the recovered value sits a hair above 5 %. See the\n# convergence check below: the bias is discretisation, not a maths error.\ncheck(\"t_rel recovers a 5% scale drift\", abs(k[\"t_rel_pct\"] - 5.0) < 0.05,\n      \"t_rel=%.4f %% (devkit discretisation bias %+.4f pp)\" % (k[\"t_rel_pct\"], k[\"t_rel_pct\"] - 5.0))",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "scaled",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "scaled = straight.copy()\nscaled[:, :3, 3] *= 1.05  # 5 % scale drift\nk = metrics.kitti_relative(scaled, straight, lengths=(100, 200, 300, 400))\n# The devkit overshoots each segment by up to one frame spacing and normalises by\n# the nominal length, so the recovered value sits a hair above 5 %. See the\n# convergence check below: the bias is discretisation, not a maths error.\ncheck(\"t_rel recovers a 5% scale drift\", abs(k[\"t_rel_pct\"] - 5.0) < 0.05,\n      \"t_rel=%.4f %% (devkit discretisation bias %+.4f pp)\" % (k[\"t_rel_pct\"], k[\"t_rel_pct\"] - 5.0))\ncheck(\"r_rel ~0 when there is no rotation error\", k[\"r_rel_deg_per_100m\"] < 1e-9,\n      \"r_rel=%.3e deg/100m\" % k[\"r_rel_deg_per_100m\"])",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "k",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "k = metrics.kitti_relative(scaled, straight, lengths=(100, 200, 300, 400))\n# The devkit overshoots each segment by up to one frame spacing and normalises by\n# the nominal length, so the recovered value sits a hair above 5 %. See the\n# convergence check below: the bias is discretisation, not a maths error.\ncheck(\"t_rel recovers a 5% scale drift\", abs(k[\"t_rel_pct\"] - 5.0) < 0.05,\n      \"t_rel=%.4f %% (devkit discretisation bias %+.4f pp)\" % (k[\"t_rel_pct\"], k[\"t_rel_pct\"] - 5.0))\ncheck(\"r_rel ~0 when there is no rotation error\", k[\"r_rel_deg_per_100m\"] < 1e-9,\n      \"r_rel=%.3e deg/100m\" % k[\"r_rel_deg_per_100m\"])\ncheck(\"path length measured on ground truth\", abs(k[\"path_length_m\"] - 1000.0) < 1e-9)\nyawed = straight.copy()",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "yawed",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "yawed = straight.copy()\ndrift = np.radians(1.0) / 100.0  # 1 deg per 100 m\nfor i in range(n):\n    yawed[i, :3, :3] = rot_z(drift * i)\nk2 = metrics.kitti_relative(yawed, straight, lengths=(100, 200, 300, 400))\ncheck(\"r_rel recovers a 1 deg/100m yaw drift\",\n      abs(k2[\"r_rel_deg_per_100m\"] - 1.0) < 0.01,\n      \"r_rel=%.4f deg/100m\" % k2[\"r_rel_deg_per_100m\"])\n# The bias must shrink with finer frame spacing -- proves it is discretisation.\nbiases = []",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "drift",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "drift = np.radians(1.0) / 100.0  # 1 deg per 100 m\nfor i in range(n):\n    yawed[i, :3, :3] = rot_z(drift * i)\nk2 = metrics.kitti_relative(yawed, straight, lengths=(100, 200, 300, 400))\ncheck(\"r_rel recovers a 1 deg/100m yaw drift\",\n      abs(k2[\"r_rel_deg_per_100m\"] - 1.0) < 0.01,\n      \"r_rel=%.4f deg/100m\" % k2[\"r_rel_deg_per_100m\"])\n# The bias must shrink with finer frame spacing -- proves it is discretisation.\nbiases = []\nfor step_m, n in ((1.0, 1001), (0.25, 4001), (0.1, 10001)):",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "k2",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "k2 = metrics.kitti_relative(yawed, straight, lengths=(100, 200, 300, 400))\ncheck(\"r_rel recovers a 1 deg/100m yaw drift\",\n      abs(k2[\"r_rel_deg_per_100m\"] - 1.0) < 0.01,\n      \"r_rel=%.4f deg/100m\" % k2[\"r_rel_deg_per_100m\"])\n# The bias must shrink with finer frame spacing -- proves it is discretisation.\nbiases = []\nfor step_m, n in ((1.0, 1001), (0.25, 4001), (0.1, 10001)):\n    s_tr = np.tile(np.eye(4), (n, 1, 1))\n    s_tr[:, 0, 3] = np.arange(n) * step_m\n    s_sc = s_tr.copy()",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "biases",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "biases = []\nfor step_m, n in ((1.0, 1001), (0.25, 4001), (0.1, 10001)):\n    s_tr = np.tile(np.eye(4), (n, 1, 1))\n    s_tr[:, 0, 3] = np.arange(n) * step_m\n    s_sc = s_tr.copy()\n    s_sc[:, :3, 3] *= 1.05\n    biases.append(metrics.kitti_relative(s_sc, s_tr, lengths=(100, 200, 300, 400))[\"t_rel_pct\"] - 5.0)\ncheck(\"discretisation bias converges to zero\",\n      biases[0] > biases[1] > biases[2] > 0 and biases[2] < 0.005,\n      \"bias %+.4f -> %+.4f -> %+.4f pp at 1.0 / 0.25 / 0.1 m spacing\" % tuple(biases))",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "agg",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "agg = metrics.aggregate([0.030, 0.028, 0.035, 0.031, 0.029])\ncheck(\"median is the headline statistic\", abs(agg[\"median\"] - 0.030) < 1e-12)\ncheck(\"std reported for spread\", agg[\"std\"] > 0.0, \"std=%.4f m\" % agg[\"std\"])\nagg_nan = metrics.aggregate([0.03, None, float(\"nan\"), 0.05])\ncheck(\"failed runs dropped, not counted\", agg_nan[\"n\"] == 2)\ncheck(\"empty input does not crash\", metrics.aggregate([])[\"n\"] == 0)\nprint(\"\")\nif FAILED:\n    print(\"FAILED: %d check(s): %s\" % (len(FAILED), \", \".join(FAILED)))\n    sys.exit(1)",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "agg_nan",
+        "kind": 5,
+        "importPath": "evaluation.harness.selftest",
+        "description": "evaluation.harness.selftest",
+        "peekOfCode": "agg_nan = metrics.aggregate([0.03, None, float(\"nan\"), 0.05])\ncheck(\"failed runs dropped, not counted\", agg_nan[\"n\"] == 2)\ncheck(\"empty input does not crash\", metrics.aggregate([])[\"n\"] == 0)\nprint(\"\")\nif FAILED:\n    print(\"FAILED: %d check(s): %s\" % (len(FAILED), \", \".join(FAILED)))\n    sys.exit(1)\nprint(\"all checks passed\")",
+        "detail": "evaluation.harness.selftest",
+        "documentation": {}
+    },
+    {
+        "label": "load_tum",
+        "kind": 2,
+        "importPath": "evaluation.harness.traj_io",
+        "description": "evaluation.harness.traj_io",
+        "peekOfCode": "def load_tum(path, stamp_scale=1.0):\n    \"\"\"TUM format: ts tx ty tz qx qy qz qw  (ORB-SLAM3 SaveTrajectoryTUM / EuRoC).\n    stamp_scale converts the file's timestamp unit to seconds\n    (1.0 for SaveTrajectoryTUM, 1e-9 for SaveTrajectoryEuRoC).\n    \"\"\"\n    d = _read_numeric_rows(path)\n    if d.shape[1] < 8:\n        raise ValueError(\"%s: expected 8 columns (ts tx ty tz qx qy qz qw), got %d\"\n                         % (path, d.shape[1]))\n    stamps = d[:, 0] * stamp_scale",
+        "detail": "evaluation.harness.traj_io",
+        "documentation": {}
+    },
+    {
+        "label": "load_orb_euroc",
+        "kind": 2,
+        "importPath": "evaluation.harness.traj_io",
+        "description": "evaluation.harness.traj_io",
+        "peekOfCode": "def load_orb_euroc(path):\n    \"\"\"ORB-SLAM3 f_*.txt / kf_*.txt from SaveTrajectoryEuRoC (timestamps in ns).\"\"\"\n    return load_tum(path, stamp_scale=1e-9)\ndef load_euroc_gt(path):\n    \"\"\"EuRoC/ASL ground truth: ts[ns], px,py,pz, qw,qx,qy,qz [, ...].\n    Covers both evaluation/Ground_truth/EuRoC_left_cam/*_GT.txt (8 columns) and\n    EuRoC_imu/*_GT.txt / the dataset's own state_groundtruth_estimate0/data.csv\n    (17 columns; the extra velocity and bias columns are ignored).\n    \"\"\"\n    d = _read_numeric_rows(path)",
+        "detail": "evaluation.harness.traj_io",
+        "documentation": {}
+    },
+    {
+        "label": "load_euroc_gt",
+        "kind": 2,
+        "importPath": "evaluation.harness.traj_io",
+        "description": "evaluation.harness.traj_io",
+        "peekOfCode": "def load_euroc_gt(path):\n    \"\"\"EuRoC/ASL ground truth: ts[ns], px,py,pz, qw,qx,qy,qz [, ...].\n    Covers both evaluation/Ground_truth/EuRoC_left_cam/*_GT.txt (8 columns) and\n    EuRoC_imu/*_GT.txt / the dataset's own state_groundtruth_estimate0/data.csv\n    (17 columns; the extra velocity and bias columns are ignored).\n    \"\"\"\n    d = _read_numeric_rows(path)\n    if d.shape[1] < 8:\n        raise ValueError(\"%s: expected >=8 columns, got %d\" % (path, d.shape[1]))\n    stamps = d[:, 0] * 1e-9",
+        "detail": "evaluation.harness.traj_io",
+        "documentation": {}
+    },
+    {
+        "label": "load_kitti_poses",
+        "kind": 2,
+        "importPath": "evaluation.harness.traj_io",
+        "description": "evaluation.harness.traj_io",
+        "peekOfCode": "def load_kitti_poses(path, times_path=None):\n    \"\"\"KITTI format: 12 floats per line = 3x4 row-major T_world_cam, no timestamp.\n    Matches both the dataset's poses/XX.txt and ORB-SLAM3's SaveTrajectoryKITTI.\n    Frame index is used as the association key unless times_path is given.\n    \"\"\"\n    d = _read_numeric_rows(path)\n    if d.shape[1] != 12:\n        raise ValueError(\"%s: expected 12 columns, got %d\" % (path, d.shape[1]))\n    n = len(d)\n    poses = np.tile(np.eye(4), (n, 1, 1))",
+        "detail": "evaluation.harness.traj_io",
+        "documentation": {}
+    },
+    {
+        "label": "load_tum_rgbd_gt",
+        "kind": 2,
+        "importPath": "evaluation.harness.traj_io",
+        "description": "evaluation.harness.traj_io",
+        "peekOfCode": "def load_tum_rgbd_gt(path):\n    \"\"\"TUM RGB-D groundtruth.txt: ts tx ty tz qx qy qz qw, timestamps in seconds.\"\"\"\n    return load_tum(path, stamp_scale=1.0)\nLOADERS = {\n    \"orb_euroc\": load_orb_euroc,\n    \"orb_tum\": load_tum,\n    \"orb_kitti\": load_kitti_poses,\n    \"gt_euroc\": load_euroc_gt,\n    \"gt_tum\": load_tum_rgbd_gt,\n    \"gt_kitti\": load_kitti_poses,",
+        "detail": "evaluation.harness.traj_io",
+        "documentation": {}
+    },
+    {
+        "label": "load",
+        "kind": 2,
+        "importPath": "evaluation.harness.traj_io",
+        "description": "evaluation.harness.traj_io",
+        "peekOfCode": "def load(path, fmt, **kw):\n    if fmt not in LOADERS:\n        raise KeyError(\"unknown format %r (known: %s)\" % (fmt, \", \".join(sorted(LOADERS))))\n    return LOADERS[fmt](path, **kw)\ndef associate(stamps_a, stamps_b, max_diff=0.02, offset=0.0):\n    \"\"\"Nearest-neighbour timestamp matching, each pose used at most once.\n    Returns (idx_a, idx_b) index arrays. max_diff is in seconds; for\n    index-keyed KITTI trajectories pass max_diff=0.5 so frame i matches frame i.\n    \"\"\"\n    b_shift = stamps_b + offset",
+        "detail": "evaluation.harness.traj_io",
+        "documentation": {}
+    },
+    {
+        "label": "associate",
+        "kind": 2,
+        "importPath": "evaluation.harness.traj_io",
+        "description": "evaluation.harness.traj_io",
+        "peekOfCode": "def associate(stamps_a, stamps_b, max_diff=0.02, offset=0.0):\n    \"\"\"Nearest-neighbour timestamp matching, each pose used at most once.\n    Returns (idx_a, idx_b) index arrays. max_diff is in seconds; for\n    index-keyed KITTI trajectories pass max_diff=0.5 so frame i matches frame i.\n    \"\"\"\n    b_shift = stamps_b + offset\n    order = np.argsort(b_shift)\n    b_sorted = b_shift[order]\n    idx_a, idx_b = [], []\n    used = np.zeros(len(b_sorted), dtype=bool)",
+        "detail": "evaluation.harness.traj_io",
+        "documentation": {}
+    },
+    {
+        "label": "LOADERS",
+        "kind": 5,
+        "importPath": "evaluation.harness.traj_io",
+        "description": "evaluation.harness.traj_io",
+        "peekOfCode": "LOADERS = {\n    \"orb_euroc\": load_orb_euroc,\n    \"orb_tum\": load_tum,\n    \"orb_kitti\": load_kitti_poses,\n    \"gt_euroc\": load_euroc_gt,\n    \"gt_tum\": load_tum_rgbd_gt,\n    \"gt_kitti\": load_kitti_poses,\n}\ndef load(path, fmt, **kw):\n    if fmt not in LOADERS:",
+        "detail": "evaluation.harness.traj_io",
+        "documentation": {}
+    },
+    {
+        "label": "check",
+        "kind": 2,
+        "importPath": "evaluation.harness.validate_dense",
+        "description": "evaluation.harness.validate_dense",
+        "peekOfCode": "def check(name, ok, detail=\"\", warn_only=False):\n    tag = \"PASS\" if ok else (\"WARN\" if warn_only else \"FAIL\")\n    print(\"  [%s] %s%s\" % (tag, name, (\"  -- \" + detail) if detail else \"\"))\n    if not ok:\n        (WARNED if warn_only else FAILED).append(name)\ndef read_pcd(path):\n    \"\"\"Minimal PCD reader: returns (xyz Nx3 float, rgb Nx3 uint8 or None).\"\"\"\n    with open(path, \"rb\") as fh:\n        header, fields, size, typ, count, width, height, points, data_fmt = {}, None, None, None, None, 0, 0, None, None\n        while True:",
+        "detail": "evaluation.harness.validate_dense",
+        "documentation": {}
+    },
+    {
+        "label": "read_pcd",
+        "kind": 2,
+        "importPath": "evaluation.harness.validate_dense",
+        "description": "evaluation.harness.validate_dense",
+        "peekOfCode": "def read_pcd(path):\n    \"\"\"Minimal PCD reader: returns (xyz Nx3 float, rgb Nx3 uint8 or None).\"\"\"\n    with open(path, \"rb\") as fh:\n        header, fields, size, typ, count, width, height, points, data_fmt = {}, None, None, None, None, 0, 0, None, None\n        while True:\n            line = fh.readline()\n            if not line:\n                raise ValueError(\"%s: truncated header\" % path)\n            txt = line.decode(\"ascii\", \"replace\").strip()\n            if not txt or txt.startswith(\"#\"):",
+        "detail": "evaluation.harness.validate_dense",
+        "documentation": {}
+    },
+    {
+        "label": "read_ot_header",
+        "kind": 2,
+        "importPath": "evaluation.harness.validate_dense",
+        "description": "evaluation.harness.validate_dense",
+        "peekOfCode": "def read_ot_header(path):\n    \"\"\"Octomap .ot files start with a plain-text header ending at 'data'.\"\"\"\n    info = {}\n    with open(path, \"rb\") as fh:\n        for _ in range(32):\n            line = fh.readline()\n            if not line:\n                break\n            txt = line.decode(\"ascii\", \"replace\").strip()\n            if txt.startswith(\"data\"):",
+        "detail": "evaluation.harness.validate_dense",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "evaluation.harness.validate_dense",
+        "description": "evaluation.harness.validate_dense",
+        "peekOfCode": "def main():\n    p = argparse.ArgumentParser(description=__doc__,\n                                formatter_class=argparse.RawDescriptionHelpFormatter)\n    p.add_argument(\"--pcd\", required=True)\n    p.add_argument(\"--ot\")\n    p.add_argument(\"--trajectory\", help=\"estimated trajectory of the same run\")\n    p.add_argument(\"--traj-format\", default=\"orb_tum\", choices=sorted(traj_io.LOADERS))\n    p.add_argument(\"--expect-extent\", type=float, default=None,\n                   help=\"rough scene size in m; warns if the cloud is far off\")\n    a = p.parse_args()",
+        "detail": "evaluation.harness.validate_dense",
+        "documentation": {}
+    },
+    {
+        "label": "read_file_list",
+        "kind": 2,
+        "importPath": "evaluation.associate",
+        "description": "evaluation.associate",
+        "peekOfCode": "def read_file_list(filename,remove_bounds):\n    \"\"\"\n    Reads a trajectory from a text file. \n    File format:\n    The file format is \"stamp d1 d2 d3 ...\", where stamp denotes the time stamp (to be matched)\n    and \"d1 d2 d3..\" is arbitary data (e.g., a 3D position and 3D orientation) associated to this timestamp. \n    Input:\n    filename -- File name\n    Output:\n    dict -- dictionary of (stamp,data) tuples",
+        "detail": "evaluation.associate",
+        "documentation": {}
+    },
+    {
+        "label": "associate",
+        "kind": 2,
+        "importPath": "evaluation.associate",
+        "description": "evaluation.associate",
+        "peekOfCode": "def associate(first_list, second_list,offset,max_difference):\n    \"\"\"\n    Associate two dictionaries of (stamp,data). As the time stamps never match exactly, we aim \n    to find the closest match for every input tuple.\n    Input:\n    first_list -- first dictionary of (stamp,data) tuples\n    second_list -- second dictionary of (stamp,data) tuples\n    offset -- time offset between both dictionaries (e.g., to model the delay between the sensors)\n    max_difference -- search radius for candidate generation\n    Output:",
+        "detail": "evaluation.associate",
+        "documentation": {}
+    },
+    {
+        "label": "align",
+        "kind": 2,
+        "importPath": "evaluation.evaluate_ate_scale",
+        "description": "evaluation.evaluate_ate_scale",
+        "peekOfCode": "def align(model,data):\n    \"\"\"Align two trajectories using the method of Horn (closed-form).\n    Input:\n    model -- first trajectory (3xn)\n    data -- second trajectory (3xn)\n    Output:\n    rot -- rotation matrix (3x3)\n    trans -- translation vector (3x1)\n    trans_error -- translational error per point (1xn)\n    \"\"\"",
+        "detail": "evaluation.evaluate_ate_scale",
+        "documentation": {}
+    },
+    {
+        "label": "plot_traj",
+        "kind": 2,
+        "importPath": "evaluation.evaluate_ate_scale",
+        "description": "evaluation.evaluate_ate_scale",
+        "peekOfCode": "def plot_traj(ax,stamps,traj,style,color,label):\n    \"\"\"\n    Plot a trajectory using matplotlib. \n    Input:\n    ax -- the plot\n    stamps -- time stamps (1xn)\n    traj -- trajectory (3xn)\n    style -- line style\n    color -- line color\n    label -- plot legend",
+        "detail": "evaluation.evaluate_ate_scale",
+        "documentation": {}
+    }
+]
