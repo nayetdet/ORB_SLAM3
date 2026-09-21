@@ -35,11 +35,17 @@ def evaluate(est_path, gt_path, est_format, gt_format, align="se3",
                len(gt_stamps), gt_stamps[-1] - gt_stamps[0], max_diff))
 
     est_m, gt_m = est_poses[ia], gt_poses[ib]
+    # Coverage is measured against the ESTIMATED trajectory: it answers "did the
+    # tracker keep producing poses", which is what a lost track breaks. Measuring
+    # against the ground truth instead would flag every healthy run, because the
+    # ground truth is usually sampled far faster than the camera (TUM ships 100 Hz
+    # mocap against a 30 Hz camera, so a perfect run matches only ~25% of it).
     out = {
         "est": est_path,
         "gt": gt_path,
         "ate": metrics.ate(est_m, gt_m, align=align),
-        "coverage": float(len(ia)) / float(len(gt_stamps)),
+        "coverage": float(len(ia)) / float(len(est_stamps)),
+        "gt_sampled": float(len(ia)) / float(len(gt_stamps)),
         "est_poses": int(len(est_stamps)),
         "gt_poses": int(len(gt_stamps)),
     }
@@ -53,8 +59,10 @@ def format_report(r):
     lines = [
         "trajectory : %s" % r["est"],
         "ground truth: %s" % r["gt"],
-        "associated : %d pairs  (%.1f%% of ground truth; %d estimated poses)"
-        % (a["n"], 100.0 * r["coverage"], r["est_poses"]),
+        "associated : %d of %d estimated poses (%.1f%%); %d ground-truth poses "
+        "exist, so %.1f%% of them were used"
+        % (a["n"], r["est_poses"], 100.0 * r["coverage"], r["gt_poses"],
+           100.0 * r["gt_sampled"]),
         "alignment  : %s%s" % (a["align"],
                                ("  (scale=%.6f)" % a["scale"]) if a["align"] == "sim3" else ""),
         "",
@@ -69,11 +77,12 @@ def format_report(r):
             "KITTI t_rel: %.4f %%      r_rel: %.4f deg/100m   (path %.1f m)"
             % (k["t_rel_pct"], k["r_rel_deg_per_100m"], k["path_length_m"]),
         ]
-    if r["coverage"] < 0.7:
+    if r["coverage"] < 0.9:
         lines += ["",
-                  "WARNING: only %.1f%% of the ground truth was matched. Tracking most "
-                  "likely got lost -- a low ATE on a partial trajectory is not a good "
-                  "result." % (100.0 * r["coverage"])]
+                  "WARNING: only %.1f%% of the estimated poses found a ground-truth "
+                  "match. Either tracking dropped out or the clocks disagree -- a low "
+                  "ATE on a partial trajectory is not a good result."
+                  % (100.0 * r["coverage"])]
     return "\n".join(lines)
 
 

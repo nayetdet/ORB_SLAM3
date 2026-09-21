@@ -97,6 +97,10 @@ Dense.mergeDistance: 0.0
 Dense.loadCloud: ""
 
 # Octomap, sec. 3.4. Thesis 4.4: ~0.01 m indoors, >=0.05 m outdoors (0.2 typical).
+# Ray casting carves free space (eq. 31-33) but makes the .ot bigger than
+# the .pcd. Table IX reports the octomap 4.8-6.5x smaller, so it is off by
+# default to match. Turn on for a navigable occupancy map.
+Dense.octomapRayCast: 0
 Dense.octomapEnabled: 1
 Dense.octomapResolution: 0.01
 

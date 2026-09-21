@@ -124,6 +124,10 @@ Dense.mergeDistance: 0.0
 Dense.loadCloud: ""
 
 # Octomap, sec. 3.4. Thesis 4.4: ~0.01 m indoors, >=0.05 m outdoors (0.2 typical).
+# Ray casting carves free space (eq. 31-33) but makes the .ot bigger than
+# the .pcd. Table IX reports the octomap 4.8-6.5x smaller, so it is off by
+# default to match. Turn on for a navigable occupancy map.
+Dense.octomapRayCast: 0
 Dense.octomapEnabled: 1
 Dense.octomapResolution: 0.05
 
@@ -142,3 +146,10 @@ Dense.roiMarginY: 0
 # is preferable when merging several sequences of the same scene.
 Dense.colorizeByDepth: 1
 Dense.solidColor: [200, 200, 200]
+
+#--------------------------------------------------------------------------------------------
+# System.UseViewer: 0 disables the Pangolin window. Required on a headless machine,
+# and it should be 0 for accuracy benchmarks anyway -- the viewer competes for CPU
+# with Local BA, which changes the ATE.
+#--------------------------------------------------------------------------------------------
+System.UseViewer: 0

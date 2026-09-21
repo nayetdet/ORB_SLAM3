@@ -78,6 +78,7 @@ PointCloudMapping::Config PointCloudMapping::LoadConfig(const std::string &setti
     readBool  (fs, "Dense.colorizeByDepth",    cfg.colorizeByDepth);
     readBool  (fs, "Dense.octomapEnabled",     cfg.octomapEnabled);
     readFloat (fs, "Dense.octomapResolution",  cfg.octomapResolution);
+    readBool  (fs, "Dense.octomapRayCast",     cfg.octomapRayCast);
     readString(fs, "Dense.saveDirectory",      cfg.saveDirectory);
     readString(fs, "Dense.savePrefix",         cfg.savePrefix);
     readString(fs, "Dense.loadCloud",          cfg.loadCloud);
@@ -544,14 +545,24 @@ void PointCloudMapping::Impl::InsertIntoOctomap(const PointCloudT::Ptr &cloudWor
 {
     if (!mpOctree) return;
 
-    octomap::Pointcloud opc;
-    opc.reserve(cloudWorld->size());
-    for (const auto &p : cloudWorld->points) opc.push_back(p.x, p.y, p.z);
+    if (mCfg.octomapRayCast)
+    {
+        // Free space is carved along every ray, so eq. (31)-(33)'s log-odds
+        // update can also decrease. Costs one node per voxel per ray.
+        octomap::Pointcloud opc;
+        opc.reserve(cloudWorld->size());
+        for (const auto &p : cloudWorld->points) opc.push_back(p.x, p.y, p.z);
+        const Eigen::Vector3f t = Twc.translation();
+        mpOctree->insertPointCloud(opc, octomap::point3d(t.x(), t.y(), t.z()));
+    }
+    else
+    {
+        // Occupied endpoints only. This is what reproduces the compression
+        // ratios of Table IX.
+        for (const auto &p : cloudWorld->points)
+            mpOctree->updateNode(p.x, p.y, p.z, true, true /*lazy_eval*/);
+    }
 
-    const Eigen::Vector3f t = Twc.translation();
-    // Ray casting from the camera centre carves free space, which is what makes
-    // the log-odds update of eq. (31)-(33) meaningful.
-    mpOctree->insertPointCloud(opc, octomap::point3d(t.x(), t.y(), t.z()));
     for (const auto &p : cloudWorld->points)
         mpOctree->integrateNodeColor(p.x, p.y, p.z, p.r, p.g, p.b);
 }
@@ -741,7 +752,12 @@ void PointCloudMapping::Save()
 
     if (mpImpl->mpOctree)
     {
-        mpImpl->mpOctree->updateInnerOccupancy();   // prune, sec. 3.4
+        // sec. 3.4: "all eight child nodes under a parent node are pruned if they
+        // are assigned with same states". updateInnerOccupancy propagates the
+        // children's values up (needed after lazy updateNode calls); prune then
+        // collapses the uniform groups, which is where the compression comes from.
+        mpImpl->mpOctree->updateInnerOccupancy();
+        mpImpl->mpOctree->prune();
         const std::string ot = base + "_octomap.ot";
         if (mpImpl->mpOctree->write(ot))
             std::cout << "[Dense] saved octomap (" << mpImpl->mpOctree->size()

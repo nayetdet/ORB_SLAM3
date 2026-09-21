@@ -105,3 +105,8 @@ borrar/*
 
 # Evaluation harness output (trajectories, SLAM logs, per-run results)
 evaluation/results/
+
+# Dense Reconstruction output (point clouds and octomaps)
+*.pcd
+*.ot
+*.bt

@@ -241,9 +241,23 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
 
     //usleep(10*1000*1000);
 
-    //Initialize the Viewer thread and launch
-    if(bUseViewer)
-    //if(false) // TODO
+    //Initialize the Viewer thread and launch.
+    //System.UseViewer in the settings file can force it off: the Pangolin window
+    //cannot open on a headless machine, and for accuracy benchmarks it should be
+    //off anyway, since it competes for CPU with Local BA.
+    bool bViewer = bUseViewer;
+    {
+        cv::FileStorage fsViewer(strSettingsFile.c_str(), cv::FileStorage::READ);
+        if(fsViewer.isOpened())
+        {
+            cv::FileNode node = fsViewer["System.UseViewer"];
+            if(!node.empty() && node.isInt())
+                bViewer = (static_cast<int>(node) != 0);
+            fsViewer.release();
+        }
+    }
+
+    if(bViewer)
     {
         mpViewer = new Viewer(this, mpFrameDrawer,mpMapDrawer,mpTracker,strSettingsFile,settings_);
         mptViewer = new thread(&Viewer::Run, mpViewer);

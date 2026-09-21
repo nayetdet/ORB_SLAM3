@@ -66,6 +66,13 @@ public:
         // --- octomap (sec. 3.4) ---
         bool  octomapEnabled     = true;
         float octomapResolution  = 0.05f;  // leaf size [m]
+        // Ray casting from the camera centre carves free space, which is what
+        // gives eq. (31)-(33)'s log-odds update something to decrease. It also
+        // creates a free node for every voxel along every ray, which makes the
+        // .ot file LARGER than the .pcd -- Table IX reports the octomap 4.8-6.5x
+        // SMALLER, so the thesis cannot have been carving. Default off to match
+        // its numbers; turn on if you want a navigable occupancy map.
+        bool  octomapRayCast     = false;
 
         // --- output ---
         std::string saveDirectory = ".";

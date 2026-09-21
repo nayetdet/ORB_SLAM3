@@ -525,7 +525,7 @@
         "kind": 2,
         "importPath": "evaluation.harness.evaluate",
         "description": "evaluation.harness.evaluate",
-        "peekOfCode": "def format_report(r):\n    a = r[\"ate\"]\n    lines = [\n        \"trajectory : %s\" % r[\"est\"],\n        \"ground truth: %s\" % r[\"gt\"],\n        \"associated : %d pairs  (%.1f%% of ground truth; %d estimated poses)\"\n        % (a[\"n\"], 100.0 * r[\"coverage\"], r[\"est_poses\"]),\n        \"alignment  : %s%s\" % (a[\"align\"],\n                               (\"  (scale=%.6f)\" % a[\"scale\"]) if a[\"align\"] == \"sim3\" else \"\"),\n        \"\",",
+        "peekOfCode": "def format_report(r):\n    a = r[\"ate\"]\n    lines = [\n        \"trajectory : %s\" % r[\"est\"],\n        \"ground truth: %s\" % r[\"gt\"],\n        \"associated : %d of %d estimated poses (%.1f%%); %d ground-truth poses \"\n        \"exist, so %.1f%% of them were used\"\n        % (a[\"n\"], r[\"est_poses\"], 100.0 * r[\"coverage\"], r[\"gt_poses\"],\n           100.0 * r[\"gt_sampled\"]),\n        \"alignment  : %s%s\" % (a[\"align\"],",
         "detail": "evaluation.harness.evaluate",
         "documentation": {}
     },

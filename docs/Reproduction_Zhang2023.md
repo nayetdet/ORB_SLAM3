@@ -60,6 +60,42 @@ nothing in practice because the per-keyframe voxel filter has already spaced the
 depth, so they are seeded at `d0`, i.e. confidence 0.5 — a new observation is then weighted
 purely by its own distance.
 
+## Finding: the compression ratio of Table IX is mostly file encoding
+
+Measured on TUM fr1_desk with the shipped settings: 1,163,624 points, octomap at
+0.01 m, 1,444,254 nodes.
+
+| | size | ratio vs .ot |
+|---|---|---|
+| `.pcd` binary (`savePCDFileBinary`, 16 B/point) | 18.62 MB | **1.61x** |
+| `.pcd` ASCII (~40 B/point) | 48.73 MB | **4.22x** |
+| `.ot` ColorOcTree | 11.55 MB | — |
+| *thesis, Table IX* | *36.7 MB / 7.5 MB* | *4.89x* |
+
+The thesis never states the PCD encoding. Its reported 4.77-6.55x only reproduces if the
+dense map was written as ASCII text and compared against a binary octree. Against a binary
+`.pcd` the same data gives 1.6x. So "the size of each dense point cloud map is reduced to
+approximately one-fifth after the conversion" (abstract) measures text-vs-binary encoding
+at least as much as Octree efficiency.
+
+This system writes binary, which is why `validate_dense.py` expects the lower figure.
+
+## Finding: Octomap ray casting cannot be what the thesis did
+
+`insertPointCloud` carves free space along every ray, which is what gives eq. (31)-(33)'s
+log-odds update something to decrease. It also creates a node per voxel per ray: on
+fr1_desk that produced 4,868,604 nodes and a **38.95 MB** `.ot`, i.e. the octomap came out
+*larger* than the point cloud (0.50x), and cost **1979 ms per keyframe**.
+
+Inserting only the occupied endpoints gives 1,444,254 nodes, 11.55 MB and **16.7 ms** per
+keyframe — 119x faster. Since Table IX reports the octomap as smaller, the thesis cannot
+have been carving free space, despite sec. 3.4 describing the full occupancy update.
+`Dense.octomapRayCast` selects between the two and defaults to off.
+
+Note the consequence: the resulting map records only occupied space, so it does not
+distinguish "free" from "unknown". That is fine for the file-size comparison the thesis
+makes, but not for the navigation use case its sec. 3.4 motivates.
+
 ## Parameters the thesis does not publish
 
 `d_min`, `d_max`, `P_max`, `P_min`, the voxel resolution, the merge distance and the SGBM
