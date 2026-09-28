@@ -146,8 +146,19 @@ if(DENSE_RECONSTRUCTION)
    target_link_libraries(${PROJECT_NAME} ${PCL_LIBRARIES} ${OCTOMAP_LIBRARIES})
    # PointCloudMapping.h stays free of PCL headers on purpose, so this is the one
    # translation unit that sees PCL and the only one that needs the flag.
+   # Dense.wlsFilter needs cv::ximgproc (opencv_contrib). Optional: without it the
+   # key only prints a warning at run time.
+   set(DENSE_COMPILE_FLAGS "-DWITH_DENSE_RECONSTRUCTION")
+   list(FIND OpenCV_LIBS opencv_ximgproc _ximgproc_idx)
+   if(NOT _ximgproc_idx EQUAL -1 OR TARGET opencv_ximgproc)
+      target_link_libraries(${PROJECT_NAME} opencv_ximgproc)
+      set(DENSE_COMPILE_FLAGS "${DENSE_COMPILE_FLAGS} -DWITH_XIMGPROC")
+      MESSAGE(STATUS "Dense reconstruction: WLS disparity filter available (opencv_ximgproc)")
+   else()
+      MESSAGE(STATUS "Dense reconstruction: opencv_ximgproc not found, Dense.wlsFilter unavailable")
+   endif()
    set_source_files_properties(src/PointCloudMapping.cc PROPERTIES
-      COMPILE_FLAGS "-DWITH_DENSE_RECONSTRUCTION")
+      COMPILE_FLAGS "${DENSE_COMPILE_FLAGS}")
 endif()
 
 # If RealSense SDK is found the library is added and its examples compiled
