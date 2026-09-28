@@ -32,6 +32,9 @@ Stereo.ThDepth: 35.0
 #--------------------------------------------------------------------------------------------
 
 # ORB Extractor: Number of features per image
+# A4: ORBextractor.nFeatures is kept IDENTICAL to the baseline KITTI00-02.yaml so a baseline-vs-dense
+# comparison isolates the dense thread. The thesis (sec. 4.2) halves it to buy speed;
+# do not reduce it here unless that is exactly what is being measured.
 ORBextractor.nFeatures: 2000
 
 # ORB Extractor: Scale factor between levels in the scale pyramid 	
@@ -101,6 +104,36 @@ Dense.octomapResolution: 0.2
 # Output: <saveDirectory>/<savePrefix>_cloud.pcd and _octomap.ot
 Dense.saveDirectory: "."
 Dense.savePrefix: "kitti"
+
+# --- Opt-in extensions (defaults below = thesis-faithful behaviour) -----------------------
+# A1: max keyframes queued for the dense thread; 0 = unlimited, else drop the oldest.
+Dense.queueLimit: 0
+# A2: 1 = run the dense thread at SCHED_IDLE (fallback nice +10).
+Dense.lowPriority: 0
+# A3: "online" (thesis) or "offline" (store keyframes+images, build everything at
+# Save() with final poses; implies reprojectOptimized and octomapAtEnd).
+Dense.mode: "online"
+# Offline only: directory to spill stored images to disk instead of RAM ("" = RAM).
+Dense.offlineSpillDir: ""
+# B1: keep clouds in the camera frame and transform with final keyframe poses at Save().
+Dense.reprojectOptimized: 0
+# A5: build the octomap once at Save() (final poses) instead of per keyframe.
+Dense.octomapAtEnd: 0
+# D1 (only with octomapRayCast: 1): max ray length in metres (<=0 = unlimited) and
+# octomap "discretize" (group rays per voxel).
+Dense.octomapMaxRange: -1.0
+Dense.octomapDiscretize: 0
+# B3: statistical outlier removal per keyframe cloud.
+Dense.outlierRemoval: 0
+Dense.outlierMeanK: 20
+Dense.outlierStddev: 1.0
+# B4 (stereo only, needs opencv_ximgproc): WLS disparity filter.
+Dense.wlsFilter: 0
+Dense.wlsLambda: 8000.0
+Dense.wlsSigmaColor: 1.5
+# D2: also write <prefix>_octomap.bt and print same-format compression ratios.
+Dense.octomapWriteBt: 0
+Dense.compressionReport: 0
 
 # Stereo only (Algorithm 2). numDisparities must be divisible by 16, blockSize odd.
 Dense.sgbmNumDisparities: 128
