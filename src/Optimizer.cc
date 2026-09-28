@@ -49,6 +49,36 @@ bool sortByVal(const pair<MapPoint*, int> &a, const pair<MapPoint*, int> &b)
     return (a.second < b.second);
 }
 
+bool Optimizer::mbDepthWeighting = false;
+float Optimizer::mfDepthSigmaPx = 1.0f;
+float Optimizer::mfDepthRefSigma = 0.05f;
+float Optimizer::mfDepthMinWeight = 0.1f;
+
+void Optimizer::SetDepthWeighting(bool bEnable, float sigmaPx, float refSigma, float minWeight)
+{
+    mbDepthWeighting = bEnable;
+    mfDepthSigmaPx = sigmaPx;
+    mfDepthRefSigma = refSigma;
+    mfDepthMinWeight = minWeight;
+}
+
+// Information matrix of a stereo/RGB-D observation (ul, v, ur). Default: identity*invSigma2 (unchanged).
+// With depth weighting the disparity component is down-weighted for far points:
+// sigma_z = z^2*sigma_d/bf, w = clamp((refSigma/sigma_z)^2, minWeight, 1).
+Eigen::Matrix3d Optimizer::StereoInformation(const float invSigma2, const float z, const float bf)
+{
+    Eigen::Matrix3d Info = Eigen::Matrix3d::Identity()*invSigma2;
+    if(mbDepthWeighting && z>0 && bf>0)
+    {
+        const double sigmaZ = double(z)*z*mfDepthSigmaPx/bf;
+        double w = mfDepthRefSigma/sigmaZ;
+        w = w*w;
+        w = std::min(1.0, std::max(double(mfDepthMinWeight), w));
+        Info(2,2) *= w;
+    }
+    return Info;
+}
+
 void Optimizer::GlobalBundleAdjustemnt(Map* pMap, int nIterations, bool* pbStopFlag, const unsigned long nLoopKF, const bool bRobust)
 {
     vector<KeyFrame*> vpKFs = pMap->GetAllKeyFrames();
@@ -203,7 +233,7 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
                 e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(pKF->mnId)));
                 e->setMeasurement(obs);
                 const float &invSigma2 = pKF->mvInvLevelSigma2[kpUn.octave];
-                Eigen::Matrix3d Info = Eigen::Matrix3d::Identity()*invSigma2;
+                Eigen::Matrix3d Info = StereoInformation(invSigma2, pKF->mvDepth[get<0>(mit->second)], pKF->mbf);
                 e->setInformation(Info);
 
                 if(bRobust)
@@ -906,7 +936,7 @@ int Optimizer::PoseOptimization(Frame *pFrame)
                     e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(0)));
                     e->setMeasurement(obs);
                     const float invSigma2 = pFrame->mvInvLevelSigma2[kpUn.octave];
-                    Eigen::Matrix3d Info = Eigen::Matrix3d::Identity()*invSigma2;
+                    Eigen::Matrix3d Info = StereoInformation(invSigma2, pFrame->mvDepth[i], pFrame->mbf);
                     e->setInformation(Info);
 
                     g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
@@ -1342,7 +1372,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
                     e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(pKFi->mnId)));
                     e->setMeasurement(obs);
                     const float &invSigma2 = pKFi->mvInvLevelSigma2[kpUn.octave];
-                    Eigen::Matrix3d Info = Eigen::Matrix3d::Identity()*invSigma2;
+                    Eigen::Matrix3d Info = StereoInformation(invSigma2, pKFi->mvDepth[get<0>(mit->second)], pKFi->mbf);
                     e->setInformation(Info);
 
                     g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
@@ -3692,7 +3722,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame* pMainKF,vector<KeyFrame*> vpAdju
                 e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(pKF->mnId)));
                 e->setMeasurement(obs);
                 const float &invSigma2 = pKF->mvInvLevelSigma2[kpUn.octave];
-                Eigen::Matrix3d Info = Eigen::Matrix3d::Identity()*invSigma2;
+                Eigen::Matrix3d Info = StereoInformation(invSigma2, pKF->mvDepth[get<0>(mit->second)], pKF->mbf);
                 e->setInformation(Info);
 
                 g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;

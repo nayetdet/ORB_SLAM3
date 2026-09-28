@@ -21,6 +21,7 @@
 #include "System.h"
 #include "Converter.h"
 #include "PointCloudMapping.h"
+#include "Optimizer.h"
 #include <thread>
 #include <pangolin/pangolin.h>
 #include <iomanip>
@@ -107,6 +108,33 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     }
 
     mStrVocabularyFilePath = strVocFile;
+
+    // Optional final global BA before saving trajectories (default off).
+    mbFinalGlobalBA = false;
+    node = fsSettings["GlobalBA.final"];
+    if(!node.empty() && node.isInt())
+        mbFinalGlobalBA = (int)node != 0;
+
+    // Optional depth-dependent information matrix for stereo/RGB-D edges (default off).
+    {
+        bool bDW = false;
+        float sigmaPx = 1.0f, refSigma = 0.05f, minW = 0.1f;
+        node = fsSettings["Optimizer.depthWeighting"];
+        if(!node.empty() && node.isInt())
+            bDW = (int)node != 0;
+        node = fsSettings["Optimizer.depthSigmaPx"];
+        if(!node.empty() && node.isReal())
+            sigmaPx = node.real();
+        node = fsSettings["Optimizer.depthRefSigma"];
+        if(!node.empty() && node.isReal())
+            refSigma = node.real();
+        node = fsSettings["Optimizer.depthMinWeight"];
+        if(!node.empty() && node.isReal())
+            minW = node.real();
+        Optimizer::SetDepthWeighting(bDW, sigmaPx, refSigma, minW);
+        if(bDW)
+            cout << "Optimizer depth weighting ON (sigmaPx=" << sigmaPx << ", refSigma=" << refSigma << " m, minWeight=" << minW << ")" << endl;
+    }
 
     bool loadedAtlas = false;
 
@@ -575,6 +603,26 @@ void System::Shutdown()
         /*usleep(5000);
     }*/
 
+    if(mbFinalGlobalBA)
+    {
+        // Wait for the threads to stop so nothing else touches the map during the final BA.
+        while(!mpLocalMapper->isFinished() || !mpLoopCloser->isFinished() || mpLoopCloser->isRunningGBA())
+            usleep(5000);
+
+        Map* pMap = mpAtlas->GetCurrentMap();
+        if(pMap && pMap->KeyFramesInMap() > 1 && pMap->GetOriginKF())
+        {
+            cout << "Final global bundle adjustment ..." << endl;
+            if(pMap->isImuInitialized())
+                Optimizer::FullInertialBA(pMap, 7, false, 0, nullptr);
+            else
+                Optimizer::GlobalBundleAdjustemnt(pMap, 20, nullptr, pMap->GetOriginKF()->mnId, false);
+            cout << "Final global bundle adjustment done" << endl;
+        }
+        else
+            cerr << "[GlobalBA.final] no usable map, skipping final global BA." << endl;
+    }
+
     if(mpPointCloudMapping)
     {
         // Drain the queue before saving: keyframes still pending would otherwise
@@ -582,6 +630,9 @@ void System::Shutdown()
         mpPointCloudMapping->RequestFinish();
         while(!mpPointCloudMapping->IsFinished())
             usleep(5000);
+        // BEGIN dense offline finalize hook (verify at merge: needs PointCloudMapping::FinalizeOffline)
+        // mpPointCloudMapping->FinalizeOffline();
+        // END dense offline finalize hook
         mpPointCloudMapping->Save();
         mpPointCloudMapping->PrintTimingSummary();
     }
