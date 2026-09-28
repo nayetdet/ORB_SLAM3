@@ -267,6 +267,9 @@ private:
 
     string mStrVocabularyFilePath;
 
+    // Run one global BA at Shutdown, before the trajectories are saved (GlobalBA.final)
+    bool mbFinalGlobalBA;
+
     Settings* settings_;
 };
 

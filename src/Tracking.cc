@@ -50,6 +50,31 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
     mnInitialFrameId(0), mbCreatedMap(false), mnFirstFrameId(0), mpCamera2(nullptr), mpLastKeyFrame(static_cast<KeyFrame*>(NULL))
 {
     mpPointCloudMapping = nullptr;
+
+    // Optional CLAHE before ORB extraction, stereo/RGB-D only (default off)
+    mbClahe = false;
+    {
+        cv::FileStorage fsClahe(strSettingPath, cv::FileStorage::READ);
+        if(fsClahe.isOpened())
+        {
+            cv::FileNode n = fsClahe["Tracking.clahe"];
+            if(!n.empty() && n.isInt())
+                mbClahe = (int)n != 0;
+            double clip = 2.0;
+            int tile = 8;
+            n = fsClahe["Tracking.claheClip"];
+            if(!n.empty() && n.isReal())
+                clip = n.real();
+            n = fsClahe["Tracking.claheTile"];
+            if(!n.empty() && n.isInt())
+                tile = (int)n;
+            if(mbClahe)
+            {
+                mpClahe = cv::createCLAHE(clip, cv::Size(tile,tile));
+                cout << "CLAHE enabled (clip=" << clip << ", tile=" << tile << ")" << endl;
+            }
+        }
+    }
     // Load camera parameters from settings file
     if(settings){
         newParameterLoader(settings);
@@ -1503,6 +1528,16 @@ Sophus::SE3f Tracking::GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat 
         mImRightDense = imGrayRight;
     }
 
+    if(mbClahe)
+    {
+        // Written to fresh Mats: the dense reconstruction input above keeps the original image.
+        cv::Mat eqLeft, eqRight;
+        mpClahe->apply(mImGray, eqLeft);
+        mpClahe->apply(imGrayRight, eqRight);
+        mImGray = eqLeft;
+        imGrayRight = eqRight;
+    }
+
     //cout << "Incoming frame creation" << endl;
 
     if (mSensor == System::STEREO && !mpCamera2)
@@ -1562,6 +1597,13 @@ Sophus::SE3f Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, co
     {
         mImColorDense = imRGB;
         mImDepthDense = imDepth;
+    }
+
+    if(mbClahe)
+    {
+        cv::Mat eq;
+        mpClahe->apply(mImGray, eq);
+        mImGray = eq;
     }
 
     if (mSensor == System::RGBD)
