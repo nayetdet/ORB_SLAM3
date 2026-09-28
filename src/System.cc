@@ -116,24 +116,43 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
         mbFinalGlobalBA = (int)node != 0;
 
     // Optional depth-dependent information matrix for stereo/RGB-D edges (default off).
+    // w = clamp((refDepth/z)^4, minWeight, maxWeight); refDepth<=0 -> the sensor's
+    // close/far threshold. Numeric keys accept int or real. State is static, i.e.
+    // shared by all System instances in the process (last one constructed wins).
     {
         bool bDW = false;
-        float sigmaPx = 1.0f, refSigma = 0.05f, minW = 0.1f;
+        float refDepth = 0.0f, minW = 0.1f, maxW = 1.0f;
+        auto readNum = [&](const char* key, float &out, bool positive)
+        {
+            cv::FileNode n = fsSettings[key];
+            if(n.empty() || !(n.isReal() || n.isInt()))
+                return;
+            const float v = (float)(double)n;
+            if(positive && v <= 0.0f)
+                cerr << "[" << key << "] must be > 0 (got " << v << "), using default " << out << endl;
+            else
+                out = v;
+        };
         node = fsSettings["Optimizer.depthWeighting"];
         if(!node.empty() && node.isInt())
             bDW = (int)node != 0;
-        node = fsSettings["Optimizer.depthSigmaPx"];
-        if(!node.empty() && node.isReal())
-            sigmaPx = node.real();
-        node = fsSettings["Optimizer.depthRefSigma"];
-        if(!node.empty() && node.isReal())
-            refSigma = node.real();
-        node = fsSettings["Optimizer.depthMinWeight"];
-        if(!node.empty() && node.isReal())
-            minW = node.real();
-        Optimizer::SetDepthWeighting(bDW, sigmaPx, refSigma, minW);
+        node = fsSettings["Optimizer.depthRefDepth"];
+        if(!node.empty() && (node.isReal() || node.isInt()))
+            refDepth = (float)(double)node;   // <=0 means auto
+        readNum("Optimizer.depthMinWeight", minW, true);
+        readNum("Optimizer.depthMaxWeight", maxW, true);
+        if(maxW < minW) { cerr << "[Optimizer.depthMaxWeight] < minWeight, using minWeight" << endl; maxW = minW; }
+        Optimizer::SetDepthWeighting(bDW, refDepth, minW, maxW);
         if(bDW)
-            cout << "Optimizer depth weighting ON (sigmaPx=" << sigmaPx << ", refSigma=" << refSigma << " m, minWeight=" << minW << ")" << endl;
+        {
+            cout << "Optimizer depth weighting ON (refDepth=" << (refDepth>0 ? to_string(refDepth)+" m" : string("auto"))
+                 << ", minWeight=" << minW << ", maxWeight=" << maxW << ")" << endl;
+            if(mSensor==IMU_STEREO || mSensor==IMU_RGBD)
+                cerr << "[Optimizer.depthWeighting] WARNING: inertial stereo edges are NOT weighted; "
+                        "only pose optimisation and visual-only BA are." << endl;
+            if(mSensor==MONOCULAR || mSensor==IMU_MONOCULAR)
+                cerr << "[Optimizer.depthWeighting] has no effect for monocular sensors." << endl;
+        }
     }
 
     bool loadedAtlas = false;
@@ -603,36 +622,56 @@ void System::Shutdown()
         /*usleep(5000);
     }*/
 
-    if(mbFinalGlobalBA)
+    // Anything that needs FINAL keyframe poses (final global BA, dense rebuild with
+    // final poses) must not overlap LocalMapping / LoopClosing / a running GBA, or it
+    // would read poses mid-update. Default runs (both off) keep the original
+    // non-waiting shutdown.
+    const bool bNeedFinalPoses = mbFinalGlobalBA ||
+        (mpPointCloudMapping && mpPointCloudMapping->NeedsFinalPoses());
+    if(bNeedFinalPoses)
     {
-        // Wait for the threads to stop so nothing else touches the map during the final BA.
         while(!mpLocalMapper->isFinished() || !mpLoopCloser->isFinished() || mpLoopCloser->isRunningGBA())
             usleep(5000);
+    }
 
-        Map* pMap = mpAtlas->GetCurrentMap();
-        if(pMap && pMap->KeyFramesInMap() > 1 && pMap->GetOriginKF())
+    // Drain the dense thread BEFORE the final GBA rewrites poses: it then sees a
+    // deterministic (pre-GBA) state and does not compete with the GBA for CPU.
+    // Final-pose modes re-read the poses in FinalizeOffline()/Save() below.
+    if(mpPointCloudMapping)
+    {
+        mpPointCloudMapping->RequestFinish();
+        while(!mpPointCloudMapping->IsFinished())
+            usleep(5000);
+    }
+
+    if(mbFinalGlobalBA)
+    {
+        // Non-robust like LoopClosing's own GBA call (LoopClosing.cc), 20 iterations.
+        vector<Map*> vpMaps = mpAtlas->GetAllMaps();
+        int nDone = 0;
+        for(Map* pMap : vpMaps)
         {
-            cout << "Final global bundle adjustment ..." << endl;
+            if(!pMap || pMap->IsBad() || pMap->KeyFramesInMap() <= 1 || !pMap->GetOriginKF())
+                continue;
+            cout << "Final global bundle adjustment on map " << pMap->GetId() << " ..." << endl;
             if(pMap->isImuInitialized())
                 Optimizer::FullInertialBA(pMap, 7, false, 0, nullptr);
             else
                 Optimizer::GlobalBundleAdjustemnt(pMap, 20, nullptr, pMap->GetOriginKF()->mnId, false);
-            cout << "Final global bundle adjustment done" << endl;
+            ++nDone;
         }
+        if(nDone > 0)
+            cout << "Final global bundle adjustment done (" << nDone << " map(s))" << endl;
         else
             cerr << "[GlobalBA.final] no usable map, skipping final global BA." << endl;
     }
 
     if(mpPointCloudMapping)
     {
-        // Drain the queue before saving: keyframes still pending would otherwise
-        // be missing from the dense map.
-        mpPointCloudMapping->RequestFinish();
-        while(!mpPointCloudMapping->IsFinished())
-            usleep(5000);
-        // BEGIN dense offline finalize hook (verify at merge: needs PointCloudMapping::FinalizeOffline)
-        // mpPointCloudMapping->FinalizeOffline();
-        // END dense offline finalize hook
+        // Runs after the backend and the final GBA: it reads the final poses. It is
+        // part of Shutdown() wall-clock, but SLAM is already finished, so it cannot
+        // perturb the trajectory (save the trajectory after Shutdown as usual).
+        mpPointCloudMapping->FinalizeOffline();
         mpPointCloudMapping->Save();
         mpPointCloudMapping->PrintTimingSummary();
     }

@@ -50,33 +50,68 @@ bool sortByVal(const pair<MapPoint*, int> &a, const pair<MapPoint*, int> &b)
 }
 
 bool Optimizer::mbDepthWeighting = false;
-float Optimizer::mfDepthSigmaPx = 1.0f;
-float Optimizer::mfDepthRefSigma = 0.05f;
+float Optimizer::mfDepthRefDepth = 0.0f;   // 0 = auto (close/far threshold of the sensor)
 float Optimizer::mfDepthMinWeight = 0.1f;
+float Optimizer::mfDepthMaxWeight = 1.0f;
 
-void Optimizer::SetDepthWeighting(bool bEnable, float sigmaPx, float refSigma, float minWeight)
+void Optimizer::SetDepthWeighting(bool bEnable, float refDepth, float minWeight, float maxWeight)
 {
     mbDepthWeighting = bEnable;
-    mfDepthSigmaPx = sigmaPx;
-    mfDepthRefSigma = refSigma;
+    mfDepthRefDepth = refDepth;
     mfDepthMinWeight = minWeight;
+    mfDepthMaxWeight = maxWeight;
+}
+
+void Optimizer::SetAutoDepthReference(float thDepthMeters)
+{
+    if(mbDepthWeighting && mfDepthRefDepth <= 0.0f && thDepthMeters > 0.0f)
+    {
+        mfDepthRefDepth = thDepthMeters;
+        cout << "Optimizer depth weighting: reference depth = close/far threshold = " << thDepthMeters << " m" << endl;
+    }
+}
+
+// Weight of the disparity (ur) component of a stereo/RGB-D observation at depth z.
+// sigma_z = z^2*sigma_d/bf, so the information scales as z^-4; normalised to 1 at
+// the reference depth: w = clamp((refDepth/z)^4, minWeight, maxWeight). Independent
+// of bf and sigma_d (they cancel). Returns 1 when the option is off.
+static double StereoWeight(const float z)
+{
+    if(!Optimizer::mbDepthWeighting || z<=0 || Optimizer::mfDepthRefDepth<=0)
+        return 1.0;
+    double r = double(Optimizer::mfDepthRefDepth)/z;
+    double w = r*r*r*r;
+    return std::min(double(Optimizer::mfDepthMaxWeight), std::max(double(Optimizer::mfDepthMinWeight), w));
 }
 
 // Information matrix of a stereo/RGB-D observation (ul, v, ur). Default: identity*invSigma2 (unchanged).
-// With depth weighting the disparity component is down-weighted for far points:
-// sigma_z = z^2*sigma_d/bf, w = clamp((refSigma/sigma_z)^2, minWeight, 1).
 Eigen::Matrix3d Optimizer::StereoInformation(const float invSigma2, const float z, const float bf)
 {
+    (void)bf;
     Eigen::Matrix3d Info = Eigen::Matrix3d::Identity()*invSigma2;
-    if(mbDepthWeighting && z>0 && bf>0)
-    {
-        const double sigmaZ = double(z)*z*mfDepthSigmaPx/bf;
-        double w = mfDepthRefSigma/sigmaZ;
-        w = w*w;
-        w = std::min(1.0, std::max(double(mfDepthMinWeight), w));
-        Info(2,2) *= w;
-    }
+    Info(2,2) *= StereoWeight(z);
     return Info;
+}
+
+// Chi2 used by the outlier gates. Down-weighting Info(2,2) would shrink chi2 and make far
+// observations pass the gate more easily, so add the down-weighting back: the gate then
+// tests the same unweighted residual as stock ORB-SLAM3 (the weighting only steers the
+// optimisation, not outlier rejection).
+template<class E>
+static double GateChi2(const E* e)
+{
+    double c = e->chi2();
+    if(!Optimizer::mbDepthWeighting)
+        return c;
+    const Eigen::Vector3d m = e->measurement();
+    const double disp = m(0)-m(2);
+    if(disp<=0)
+        return c;
+    const double w = StereoWeight(float(e->bf/disp));
+    if(w>=1.0 || w<=0.0)
+        return c;
+    const Eigen::Vector3d err = e->error();
+    return c + err(2)*err(2)*e->information()(2,2)*(1.0/w-1.0);
 }
 
 void Optimizer::GlobalBundleAdjustemnt(Map* pMap, int nIterations, bool* pbStopFlag, const unsigned long nLoopKF, const bool bRobust)
@@ -380,7 +415,7 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
                     if(pMP->isBad())
                         continue;
 
-                    if(e->chi2()>7.815 || !e->isDepthPositive())
+                    if(GateChi2(e)>7.815 || !e->isDepthPositive())
                     {
                         numStereoBadPoints++;
                     }
@@ -1111,7 +1146,7 @@ int Optimizer::PoseOptimization(Frame *pFrame)
                 e->computeError();
             }
 
-            const float chi2 = e->chi2();
+            const float chi2 = GateChi2(e);
 
             if(chi2>chi2Stereo[it])
             {
@@ -1482,7 +1517,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
         if(pMP->isBad())
             continue;
 
-        if(e->chi2()>7.815 || !e->isDepthPositive())
+        if(GateChi2(e)>7.815 || !e->isDepthPositive())
         {
             KeyFrame* pKFi = vpEdgeKFStereo[i];
             vToErase.push_back(make_pair(pKFi,pMP));
@@ -3788,7 +3823,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame* pMainKF,vector<KeyFrame*> vpAdju
             if(pMP->isBad())
                 continue;
 
-            if(e->chi2()>7.815 || !e->isDepthPositive())
+            if(GateChi2(e)>7.815 || !e->isDepthPositive())
             {
                 e->setLevel(1);
                 badStereoMP++;
@@ -3837,7 +3872,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame* pMainKF,vector<KeyFrame*> vpAdju
         if(pMP->isBad())
             continue;
 
-        if(e->chi2()>7.815 || !e->isDepthPositive())
+        if(GateChi2(e)>7.815 || !e->isDepthPositive())
         {
             KeyFrame* pKFi = vpEdgeKFStereo[i];
             vToErase.push_back(make_pair(pKFi,pMP));
@@ -3946,7 +3981,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame* pMainKF,vector<KeyFrame*> vpAdju
             if(pMP->isBad())
                 continue;
 
-            if(e->chi2()>7.815 || !e->isDepthPositive())
+            if(GateChi2(e)>7.815 || !e->isDepthPositive())
             {
                 numStereoBadPoints++;
                 vpStereoMPsBad.push_back(pMP);

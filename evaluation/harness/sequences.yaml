@@ -118,6 +118,84 @@ configs:
     gt_from_sequence: "groundtruth.txt"
     max_diff: 0.02
 
+  # ---------------------------------------------------------------------------
+  # melhorias.md variants. Settings are *_Dense_Imp.yaml / *_Dense_Offline.yaml.
+  # ---------------------------------------------------------------------------
+  # --- improved variants: A1 queueLimit=3 + A2 lowPriority + A4 + C1 (GlobalBA.final)
+
+  euroc_stereo_dense_imp:
+    dataset: euroc
+    sensor: stereo
+    align: se3
+    binary: Examples/Stereo/stereo_euroc
+    settings: Examples/Stereo/EuRoC_Dense_Imp.yaml
+    timestamps_dir: Examples/Stereo/EuRoC_TimeStamps
+    est_format: orb_euroc
+    gt_format: gt_euroc
+    gt_dir: evaluation/Ground_truth/EuRoC_left_cam
+    gt_template: "{gt}"
+    max_diff: 0.02
+
+  kitti_stereo_dense_imp:
+    dataset: kitti
+    sensor: stereo
+    align: se3
+    binary: Examples/Stereo/stereo_kitti
+    est_format: orb_kitti
+    gt_format: gt_kitti
+    gt_template: "poses/{gt}"
+    max_diff: 0.5
+    kitti_relative: true
+
+  tum_rgbd_dense_imp:
+    dataset: tum
+    sensor: rgbd
+    align: se3
+    binary: Examples/RGB-D/rgbd_tum
+    associations_dir: Examples/RGB-D/associations
+    est_format: orb_tum
+    gt_format: gt_tum
+    gt_from_sequence: "groundtruth.txt"
+    max_diff: 0.02
+
+  # --- improved variants: A3 offline + B1 + A5, no C1 (trajectory == baseline by construction)
+
+  euroc_stereo_dense_offline:
+    dataset: euroc
+    sensor: stereo
+    align: se3
+    binary: Examples/Stereo/stereo_euroc
+    settings: Examples/Stereo/EuRoC_Dense_Offline.yaml
+    timestamps_dir: Examples/Stereo/EuRoC_TimeStamps
+    est_format: orb_euroc
+    gt_format: gt_euroc
+    gt_dir: evaluation/Ground_truth/EuRoC_left_cam
+    gt_template: "{gt}"
+    max_diff: 0.02
+
+  kitti_stereo_dense_offline:
+    dataset: kitti
+    sensor: stereo
+    align: se3
+    binary: Examples/Stereo/stereo_kitti
+    est_format: orb_kitti
+    gt_format: gt_kitti
+    gt_template: "poses/{gt}"
+    max_diff: 0.5
+    kitti_relative: true
+
+  tum_rgbd_dense_offline:
+    dataset: tum
+    sensor: rgbd
+    align: se3
+    binary: Examples/RGB-D/rgbd_tum
+    associations_dir: Examples/RGB-D/associations
+    est_format: orb_tum
+    gt_format: gt_tum
+    gt_from_sequence: "groundtruth.txt"
+    max_diff: 0.02
+
+
 # ---------------------------------------------------------------------------
 # Sequences. `folder` is relative to the dataset root.
 # ---------------------------------------------------------------------------
@@ -198,6 +276,79 @@ sequences:
     # association file in this repo. Generate one with:
     #   python3 evaluation/harness/make_tum_associations.py <seq_folder> > Examples/RGB-D/associations/fr2_large_no_loop.txt
     # then add the entry here with settings: Examples/RGB-D/TUM2.yaml
+
+  # --- melhorias.md variants (see configs above) ---
+  euroc_stereo_dense_imp:
+    MH01: {folder: MH_01_easy,      times: MH01.txt, gt: MH01_GT.txt}
+    MH02: {folder: MH_02_easy,      times: MH02.txt, gt: MH02_GT.txt}
+    MH03: {folder: MH_03_medium,    times: MH03.txt, gt: MH03_GT.txt}
+    MH04: {folder: MH_04_difficult, times: MH04.txt, gt: MH04_GT.txt}
+    MH05: {folder: MH_05_difficult, times: MH05.txt, gt: MH05_GT.txt}
+    V101: {folder: V1_01_easy,      times: V101.txt, gt: V101_GT.txt}
+    V102: {folder: V1_02_medium,    times: V102.txt, gt: V102_GT.txt}
+    V103: {folder: V1_03_difficult, times: V103.txt, gt: V103_GT.txt}
+    V201: {folder: V2_01_easy,      times: V201.txt, gt: V201_GT.txt}
+    V202: {folder: V2_02_medium,    times: V202.txt, gt: V202_GT.txt}
+    V203: {folder: V2_03_difficult, times: V203.txt, gt: V203_GT.txt}
+
+  kitti_stereo_dense_imp:
+    "00": {folder: sequences/00, gt: "00.txt", settings: Examples/Stereo/KITTI00-02_Dense_Imp.yaml}
+    "01": {folder: sequences/01, gt: "01.txt", settings: Examples/Stereo/KITTI00-02_Dense_Imp.yaml}
+    "02": {folder: sequences/02, gt: "02.txt", settings: Examples/Stereo/KITTI00-02_Dense_Imp.yaml}
+    "03": {folder: sequences/03, gt: "03.txt", settings: Examples/Stereo/KITTI03_Dense_Imp.yaml}
+    "04": {folder: sequences/04, gt: "04.txt", settings: Examples/Stereo/KITTI04-12_Dense_Imp.yaml}
+    "05": {folder: sequences/05, gt: "05.txt", settings: Examples/Stereo/KITTI04-12_Dense_Imp.yaml}
+    "06": {folder: sequences/06, gt: "06.txt", settings: Examples/Stereo/KITTI04-12_Dense_Imp.yaml}
+    "07": {folder: sequences/07, gt: "07.txt", settings: Examples/Stereo/KITTI04-12_Dense_Imp.yaml}
+    "08": {folder: sequences/08, gt: "08.txt", settings: Examples/Stereo/KITTI04-12_Dense_Imp.yaml}
+    "09": {folder: sequences/09, gt: "09.txt", settings: Examples/Stereo/KITTI04-12_Dense_Imp.yaml}
+    "10": {folder: sequences/10, gt: "10.txt", settings: Examples/Stereo/KITTI04-12_Dense_Imp.yaml}
+
+  tum_rgbd_dense_imp:
+    fr1_desk: {folder: rgbd_dataset_freiburg1_desk, assoc: fr1_desk.txt, settings: Examples/RGB-D/TUM1_Dense_Imp.yaml}
+    fr1_room: {folder: rgbd_dataset_freiburg1_room, assoc: fr1_room.txt, settings: Examples/RGB-D/TUM1_Dense_Imp.yaml}
+    fr1_xyz: {folder: rgbd_dataset_freiburg1_xyz, assoc: fr1_xyz.txt, settings: Examples/RGB-D/TUM1_Dense_Imp.yaml}
+    fr2_desk: {folder: rgbd_dataset_freiburg2_desk, assoc: fr2_desk.txt, settings: Examples/RGB-D/TUM2_Dense_Imp.yaml}
+    fr2_xyz: {folder: rgbd_dataset_freiburg2_xyz, assoc: fr2_xyz.txt, settings: Examples/RGB-D/TUM2_Dense_Imp.yaml}
+    fr3_office: {folder: rgbd_dataset_freiburg3_long_office_household, assoc: fr3_office.txt, settings: Examples/RGB-D/TUM3_Dense_Imp.yaml}
+    fr2_large_no_loop: {folder: rgbd_dataset_freiburg2_large_no_loop, assoc: fr2_large_no_loop.txt, settings: Examples/RGB-D/TUM2_Dense_Imp.yaml}
+    fr2_large_with_loop: {folder: rgbd_dataset_freiburg2_large_with_loop, assoc: fr2_large_with_loop.txt, settings: Examples/RGB-D/TUM2_Dense_Imp.yaml}
+
+  euroc_stereo_dense_offline:
+    MH01: {folder: MH_01_easy,      times: MH01.txt, gt: MH01_GT.txt}
+    MH02: {folder: MH_02_easy,      times: MH02.txt, gt: MH02_GT.txt}
+    MH03: {folder: MH_03_medium,    times: MH03.txt, gt: MH03_GT.txt}
+    MH04: {folder: MH_04_difficult, times: MH04.txt, gt: MH04_GT.txt}
+    MH05: {folder: MH_05_difficult, times: MH05.txt, gt: MH05_GT.txt}
+    V101: {folder: V1_01_easy,      times: V101.txt, gt: V101_GT.txt}
+    V102: {folder: V1_02_medium,    times: V102.txt, gt: V102_GT.txt}
+    V103: {folder: V1_03_difficult, times: V103.txt, gt: V103_GT.txt}
+    V201: {folder: V2_01_easy,      times: V201.txt, gt: V201_GT.txt}
+    V202: {folder: V2_02_medium,    times: V202.txt, gt: V202_GT.txt}
+    V203: {folder: V2_03_difficult, times: V203.txt, gt: V203_GT.txt}
+
+  kitti_stereo_dense_offline:
+    "00": {folder: sequences/00, gt: "00.txt", settings: Examples/Stereo/KITTI00-02_Dense_Offline.yaml}
+    "01": {folder: sequences/01, gt: "01.txt", settings: Examples/Stereo/KITTI00-02_Dense_Offline.yaml}
+    "02": {folder: sequences/02, gt: "02.txt", settings: Examples/Stereo/KITTI00-02_Dense_Offline.yaml}
+    "03": {folder: sequences/03, gt: "03.txt", settings: Examples/Stereo/KITTI03_Dense_Offline.yaml}
+    "04": {folder: sequences/04, gt: "04.txt", settings: Examples/Stereo/KITTI04-12_Dense_Offline.yaml}
+    "05": {folder: sequences/05, gt: "05.txt", settings: Examples/Stereo/KITTI04-12_Dense_Offline.yaml}
+    "06": {folder: sequences/06, gt: "06.txt", settings: Examples/Stereo/KITTI04-12_Dense_Offline.yaml}
+    "07": {folder: sequences/07, gt: "07.txt", settings: Examples/Stereo/KITTI04-12_Dense_Offline.yaml}
+    "08": {folder: sequences/08, gt: "08.txt", settings: Examples/Stereo/KITTI04-12_Dense_Offline.yaml}
+    "09": {folder: sequences/09, gt: "09.txt", settings: Examples/Stereo/KITTI04-12_Dense_Offline.yaml}
+    "10": {folder: sequences/10, gt: "10.txt", settings: Examples/Stereo/KITTI04-12_Dense_Offline.yaml}
+
+  tum_rgbd_dense_offline:
+    fr1_desk: {folder: rgbd_dataset_freiburg1_desk, assoc: fr1_desk.txt, settings: Examples/RGB-D/TUM1_Dense_Offline.yaml}
+    fr1_room: {folder: rgbd_dataset_freiburg1_room, assoc: fr1_room.txt, settings: Examples/RGB-D/TUM1_Dense_Offline.yaml}
+    fr1_xyz: {folder: rgbd_dataset_freiburg1_xyz, assoc: fr1_xyz.txt, settings: Examples/RGB-D/TUM1_Dense_Offline.yaml}
+    fr2_desk: {folder: rgbd_dataset_freiburg2_desk, assoc: fr2_desk.txt, settings: Examples/RGB-D/TUM2_Dense_Offline.yaml}
+    fr2_xyz: {folder: rgbd_dataset_freiburg2_xyz, assoc: fr2_xyz.txt, settings: Examples/RGB-D/TUM2_Dense_Offline.yaml}
+    fr3_office: {folder: rgbd_dataset_freiburg3_long_office_household, assoc: fr3_office.txt, settings: Examples/RGB-D/TUM3_Dense_Offline.yaml}
+    fr2_large_no_loop: {folder: rgbd_dataset_freiburg2_large_no_loop, assoc: fr2_large_no_loop.txt, settings: Examples/RGB-D/TUM2_Dense_Offline.yaml}
+    fr2_large_with_loop: {folder: rgbd_dataset_freiburg2_large_with_loop, assoc: fr2_large_with_loop.txt, settings: Examples/RGB-D/TUM2_Dense_Offline.yaml}
 
 # ---------------------------------------------------------------------------
 # Baselines from the literature, for the comparison table. These are reference

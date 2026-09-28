@@ -149,8 +149,10 @@ if(DENSE_RECONSTRUCTION)
    # Dense.wlsFilter needs cv::ximgproc (opencv_contrib). Optional: without it the
    # key only prints a warning at run time.
    set(DENSE_COMPILE_FLAGS "-DWITH_DENSE_RECONSTRUCTION")
+   # Opt out with -DDENSE_WITH_XIMGPROC=OFF to keep the link line identical to master.
+   option(DENSE_WITH_XIMGPROC "Link opencv_ximgproc (if available) for Dense.wlsFilter" ON)
    list(FIND OpenCV_LIBS opencv_ximgproc _ximgproc_idx)
-   if(NOT _ximgproc_idx EQUAL -1 OR TARGET opencv_ximgproc)
+   if(DENSE_WITH_XIMGPROC AND (NOT _ximgproc_idx EQUAL -1 OR TARGET opencv_ximgproc))
       target_link_libraries(${PROJECT_NAME} opencv_ximgproc)
       set(DENSE_COMPILE_FLAGS "${DENSE_COMPILE_FLAGS} -DWITH_XIMGPROC")
       MESSAGE(STATUS "Dense reconstruction: WLS disparity filter available (opencv_ximgproc)")

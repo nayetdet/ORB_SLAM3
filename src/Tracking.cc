@@ -51,7 +51,8 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
 {
     mpPointCloudMapping = nullptr;
 
-    // Optional CLAHE before ORB extraction, stereo/RGB-D only (default off)
+    // Optional CLAHE before ORB extraction, stereo/RGB-D only (default off).
+    // Numeric keys accept both int and real YAML values; invalid values fall back to defaults.
     mbClahe = false;
     {
         cv::FileStorage fsClahe(strSettingPath, cv::FileStorage::READ);
@@ -63,11 +64,18 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
             double clip = 2.0;
             int tile = 8;
             n = fsClahe["Tracking.claheClip"];
-            if(!n.empty() && n.isReal())
-                clip = n.real();
+            if(!n.empty() && (n.isReal() || n.isInt()))
+                clip = (double)n;
             n = fsClahe["Tracking.claheTile"];
-            if(!n.empty() && n.isInt())
-                tile = (int)n;
+            if(!n.empty() && (n.isInt() || n.isReal()))
+                tile = (int)(double)n;
+            if(clip <= 0.0) { cerr << "[Tracking.claheClip] must be > 0, using 2.0" << endl; clip = 2.0; }
+            if(tile <= 0)   { cerr << "[Tracking.claheTile] must be > 0, using 8" << endl; tile = 8; }
+            if(mbClahe && (sensor==System::MONOCULAR || sensor==System::IMU_MONOCULAR))
+            {
+                cerr << "[Tracking.clahe] not implemented for monocular sensors, ignored." << endl;
+                mbClahe = false;
+            }
             if(mbClahe)
             {
                 mpClahe = cv::createCLAHE(clip, cv::Size(tile,tile));
@@ -120,6 +128,9 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
             }
         }
     }
+
+    if(sensor==System::STEREO || sensor==System::RGBD || sensor==System::IMU_STEREO || sensor==System::IMU_RGBD)
+        Optimizer::SetAutoDepthReference(mThDepth);
 
     initID = 0; lastID = 0;
     mbInitWith3KFs = false;

@@ -166,6 +166,10 @@ public:
      *  in plain online mode. */
     void FinalizeOffline();
 
+    /** True when Save() rebuilds the cloud/octomap from keyframe poses, i.e. the
+     *  caller must let LocalMapping/LoopClosing/GBA finish before Save(). */
+    bool NeedsFinalPoses() const;
+
     /** Writes <saveDirectory>/<savePrefix>_cloud.pcd and _octomap.ot. */
     void Save();
 

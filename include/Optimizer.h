@@ -48,7 +48,9 @@ class Optimizer
 public:
 
     // Optional depth-dependent weighting of stereo/RGB-D observations (off by default).
-    static void SetDepthWeighting(bool bEnable, float sigmaPx, float refSigma, float minWeight);
+    static void SetDepthWeighting(bool bEnable, float refDepth, float minWeight, float maxWeight);
+    // Called by Tracking once the close/far threshold [m] is known; used when refDepth<=0.
+    static void SetAutoDepthReference(float thDepthMeters);
     static Eigen::Matrix3d StereoInformation(const float invSigma2, const float z, const float bf);
 
     void static BundleAdjustment(const std::vector<KeyFrame*> &vpKF, const std::vector<MapPoint*> &vpMP,
@@ -95,7 +97,7 @@ public:
 
     // Depth weighting settings (see SetDepthWeighting)
     static bool mbDepthWeighting;
-    static float mfDepthSigmaPx, mfDepthRefSigma, mfDepthMinWeight;
+    static float mfDepthRefDepth, mfDepthMinWeight, mfDepthMaxWeight;
 
     // Marginalize block element (start:end,start:end). Perform Schur complement.
     // Marginalized elements are filled with zeros.

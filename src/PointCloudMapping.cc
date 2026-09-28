@@ -12,6 +12,7 @@
 #include "PointCloudMapping.h"
 
 #include <algorithm>
+#include <atomic>
 #include <iostream>
 #include <string>
 
@@ -160,6 +161,7 @@ void PointCloudMapping::InsertKeyFrameStereo(KeyFrame *, const cv::Mat &, const 
 void PointCloudMapping::RequestFinish() {}
 bool PointCloudMapping::IsFinished() { return true; }
 void PointCloudMapping::FinalizeOffline() {}
+bool PointCloudMapping::NeedsFinalPoses() const { return false; }
 void PointCloudMapping::Save() {}
 bool PointCloudMapping::LoadCloud(const std::string &) { return false; }
 size_t PointCloudMapping::CloudSize() { return 0; }
@@ -179,6 +181,7 @@ void PointCloudMapping::PrintTimingSummary() {}
 #include <list>
 #include <mutex>
 #include <numeric>
+#include <set>
 #include <thread>
 #include <vector>
 
@@ -211,6 +214,7 @@ void PointCloudMapping::PrintTimingSummary() {}
 #include <sophus/se3.hpp>
 
 #include "KeyFrame.h"
+#include "Map.h"
 #include "System.h"
 
 namespace ORB_SLAM3
@@ -229,6 +233,31 @@ static cv::Vec3b depthToRainbow(float z, float dmin, float dmax)
     cv::cvtColor(hsv, bgr, cv::COLOR_HSV2BGR);
     return bgr.at<cv::Vec3b>(0, 0);
 }
+
+// True only on the dense thread when it runs at SCHED_IDLE.
+static thread_local bool tlIdleSched = false;
+
+/** A2 priority-inversion guard: while the SCHED_IDLE dense thread holds a mutex
+ *  that another thread (tracking, viewer, Save) may wait on, run it at normal
+ *  priority so it cannot be starved while holding the lock. */
+struct PrioBoost
+{
+    bool active = false;
+    PrioBoost()
+    {
+        if (!tlIdleSched) return;
+        sched_param sp;
+        sp.sched_priority = 0;
+        active = (pthread_setschedparam(pthread_self(), SCHED_OTHER, &sp) == 0);
+    }
+    ~PrioBoost()
+    {
+        if (!active) return;
+        sched_param sp;
+        sp.sched_priority = 0;
+        pthread_setschedparam(pthread_self(), SCHED_IDLE, &sp);
+    }
+};
 
 struct PointCloudMapping::Impl
 {
@@ -274,8 +303,12 @@ struct PointCloudMapping::Impl
     std::vector<QueueItem>   mvOffline;    // offline: raw keyframes, guarded by mMutexQueue
     int                      mnSpill = 0;
     std::mutex               mMutexFinalize;
-    double                   mFinalizeSeconds = 0.0;
-    size_t                   mnDropped = 0;   // A1
+    std::atomic<double>      mFinalizeSeconds{0.0};
+    std::atomic<size_t>      mnDropped{0};    // A1
+    std::atomic<size_t>      mnRescued{0};    // culled keyframes recovered via the spanning tree
+    std::atomic<size_t>      mnSkippedNoPose{0};   // dropped: no live ancestor
+    std::atomic<size_t>      mnEmptyCloud{0};      // dropped: keyframe gave an empty cloud
+    std::atomic<bool>        mbFinalDone{false};   // final-pose rebuild is up to date
 
     PointCloudT::Ptr   mpPriorCloud;          // cloud loaded before the run, if any
     std::vector<float> mvPriorDepth;
@@ -323,10 +356,11 @@ struct PointCloudMapping::Impl
 /** Pose of a keyframe as of now. A keyframe culled during the run keeps a stale
  *  pose, so follow the spanning tree (mTcp, set in SetBadFlag) to the nearest
  *  live ancestor, which the backend keeps optimising. */
-static bool finalTwc(KeyFrame *pKF, Sophus::SE3f &Twc)
+static bool finalTwc(KeyFrame *pKF, Sophus::SE3f &Twc, bool *pRescued = nullptr)
 {
     Sophus::SE3f rel;   // Tcw(pKF) = rel * Tcw(cur)
     KeyFrame *cur = pKF;
+    if (pRescued) *pRescued = pKF->isBad();
     for (int guard = 0; cur->isBad(); ++guard)
     {
         KeyFrame *par = cur->GetParent();
@@ -443,13 +477,18 @@ PointCloudMapping::Impl::Impl(const Config &cfg, int sensor)
                   << " outlierRemoval=" << mCfg.outlierRemoval
                   << " wls=" << mCfg.wlsFilter << std::endl;
 
-    if (mbOffline)
+    if (mbOffline && mCfg.offlineSpillDir.empty())
     {
         // Nothing to consume during the run: keyframes are only stored, and
         // FinalizeOffline() builds everything afterwards.
         mbFinished = true;
-        if (!mCfg.offlineSpillDir.empty())
-            std::filesystem::create_directories(mCfg.offlineSpillDir);
+    }
+    else if (mbOffline)
+    {
+        // Spill mode: a worker thread writes the images to disk so the tracking
+        // thread never waits on file I/O (see Run()).
+        std::filesystem::create_directories(mCfg.offlineSpillDir);
+        mThread = std::thread(&PointCloudMapping::Impl::Run, this);
     }
     else
         mThread = std::thread(&PointCloudMapping::Impl::Run, this);
@@ -491,7 +530,7 @@ void PointCloudMapping::Impl::ApplyLowPriority()
     // to nice +10 on this thread only (nice is per-thread on Linux).
     sched_param sp;
     sp.sched_priority = 0;
-    if (pthread_setschedparam(pthread_self(), SCHED_IDLE, &sp) == 0) return;
+    if (pthread_setschedparam(pthread_self(), SCHED_IDLE, &sp) == 0) { tlIdleSched = true; return; }
     if (setpriority(PRIO_PROCESS, static_cast<id_t>(syscall(SYS_gettid)), 10) != 0)
         std::cerr << "[Dense] could not lower the dense thread priority." << std::endl;
 }
@@ -531,11 +570,22 @@ void PointCloudMapping::Impl::Enqueue(QueueItem &&item)
 {
     if (mbOffline)
     {
-        if (!mCfg.offlineSpillDir.empty()) SpillItem(item);
+        if (!mCfg.offlineSpillDir.empty())
+        {
+            // Hand the item to the worker thread; never do disk I/O on the tracking thread.
+            {
+                std::unique_lock<std::mutex> lock(mMutexQueue);
+                mlQueue.push_back(std::move(item));
+            }
+            mQueueUpdated.notify_one();
+            return;
+        }
         std::unique_lock<std::mutex> lock(mMutexQueue);
         mvOffline.push_back(std::move(item));
+        mbFinalDone = false;
         return;
     }
+    mbFinalDone = false;
     {
         std::unique_lock<std::mutex> lock(mMutexQueue);
         mlQueue.push_back(std::move(item));
@@ -688,6 +738,7 @@ PointCloudMapping::Impl::GenerateCloudStereo(KeyFrame *pKF, const cv::Mat &imLef
 void PointCloudMapping::Impl::MergeProbabilistic(const PointCloudT::Ptr &cloudWorld,
                                                  const std::vector<float> &depths)
 {
+    PrioBoost boost;
     std::unique_lock<std::mutex> lock(mMutexCloud);
 
     if (mpGlobalCloud->empty())
@@ -773,6 +824,7 @@ void PointCloudMapping::Impl::MergeProbabilistic(const PointCloudT::Ptr &cloudWo
 void PointCloudMapping::Impl::MergeAppend(const PointCloudT::Ptr &cloudWorld,
                                           const std::vector<float> &depths)
 {
+    PrioBoost boost;
     std::unique_lock<std::mutex> lock(mMutexCloud);
     *mpGlobalCloud += *cloudWorld;
     mvGlobalDepth.insert(mvGlobalDepth.end(), depths.begin(), depths.end());
@@ -780,6 +832,7 @@ void PointCloudMapping::Impl::MergeAppend(const PointCloudT::Ptr &cloudWorld,
 
 void PointCloudMapping::Impl::VoxelFilterGlobal()
 {
+    PrioBoost boost;
     std::unique_lock<std::mutex> lock(mMutexCloud);
     if (mpGlobalCloud->empty()) return;
 
@@ -892,6 +945,8 @@ void PointCloudMapping::Impl::Run()
     {
         QueueItem item;
         {
+            // Normal priority while mMutexQueue is held: tracking's Enqueue waits on it.
+            PrioBoost boost;
             std::unique_lock<std::mutex> lock(mMutexQueue);
             mQueueUpdated.wait_for(lock, std::chrono::milliseconds(50),
                                    [this] { return !mlQueue.empty(); });
@@ -905,7 +960,23 @@ void PointCloudMapping::Impl::Run()
             mlQueue.pop_front();
         }
 
-        if (item.pKF == nullptr || item.pKF->isBad()) continue;
+        if (mbOffline)
+        {
+            // Offline + spill: the disk write happens here, off the tracking thread.
+            if (item.pKF != nullptr)
+            {
+                SpillItem(item);
+                PrioBoost boost;
+                std::unique_lock<std::mutex> lock(mMutexQueue);
+                mvOffline.push_back(std::move(item));
+            }
+            continue;
+        }
+
+        // In final-pose modes a keyframe culled meanwhile is kept: finalTwc()
+        // follows its spanning-tree parent, exactly like FinalizeAll() does, so
+        // online and offline integrate the same keyframe set. Thesis mode skips it.
+        if (item.pKF == nullptr || (!mbStoreCam && item.pKF->isBad())) continue;
 
         const auto t0 = clock::now();
 
@@ -917,6 +988,7 @@ void PointCloudMapping::Impl::Run()
         const auto t2 = clock::now();
 
         // B1/A5: keep the camera-frame cloud so Save() can use the final poses.
+        if (mbStoreCam && cloudCamF->empty()) ++mnEmptyCloud;
         if (mbStoreCam && !cloudCamF->empty())
         {
             StoredCloud sc;
@@ -925,6 +997,7 @@ void PointCloudMapping::Impl::Run()
             sc.depths = depths;
             std::unique_lock<std::mutex> ls(mMutexStored);
             mvStored.push_back(std::move(sc));
+            mbFinalDone = false;
         }
 
         // Algorithm 1 line 21 / Algorithm 2 line 25: camera frame -> world. The
@@ -985,7 +1058,9 @@ void PointCloudMapping::Impl::IntegrateFinal(const StoredCloud &sc, int &sinceFi
 {
     if (!sc.pKF || !sc.cloud || sc.cloud->empty()) return;
     Sophus::SE3f Twc;
-    if (!finalTwc(sc.pKF, Twc)) return;
+    bool rescued = false;
+    if (!finalTwc(sc.pKF, Twc, &rescued)) { ++mnSkippedNoPose; return; }
+    if (rescued) ++mnRescued;
 
     PointCloudT::Ptr cloudWorld(new PointCloudT());
     pcl::transformPointCloud(*sc.cloud, *cloudWorld, Twc.matrix());
@@ -1006,6 +1081,36 @@ void PointCloudMapping::Impl::FinalizeAll()
 {
     std::unique_lock<std::mutex> lockFin(mMutexFinalize);
     if (!mbStoreCam) return;
+
+    // The dense thread must be done: it appends to mvStored / the world cloud and
+    // (offline+spill) still moves items into mvOffline.
+    if (mThread.joinable())
+    {
+        bool fin;
+        {
+            std::unique_lock<std::mutex> lf(mMutexFinish);
+            fin = mbFinished;
+            if (!fin) mbFinishRequested = true;
+        }
+        if (!fin)
+        {
+            std::cerr << "[Dense] final-pose rebuild requested while the dense thread is "
+                         "still running; draining it first." << std::endl;
+            mQueueUpdated.notify_all();
+            for (;;)
+            {
+                { std::unique_lock<std::mutex> lf(mMutexFinish); if (mbFinished) break; }
+                std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            }
+        }
+    }
+
+    // Idempotent: nothing new since the last rebuild.
+    if (mbFinalDone.load())
+    {
+        std::unique_lock<std::mutex> lock(mMutexQueue);
+        if (mvOffline.empty()) return;
+    }
 
     using clock = std::chrono::steady_clock;
     const auto t0 = clock::now();
@@ -1037,7 +1142,7 @@ void PointCloudMapping::Impl::FinalizeAll()
             }
             item.imA.release();
             item.imB.release();
-            if (cam->empty()) continue;
+            if (cam->empty()) { ++mnEmptyCloud; continue; }
             StoredCloud sc;
             sc.pKF = item.pKF;
             sc.cloud = cam;
@@ -1062,8 +1167,27 @@ void PointCloudMapping::Impl::FinalizeAll()
     if (mbOctoAtEnd) ResetOctree();
 
     int sinceFilter = 0;
+    mnRescued = 0;
+    mnSkippedNoPose = 0;
     for (const auto &sc : stored) IntegrateFinal(sc, sinceFilter);
     if (mbReproject && !mCfg.probabilisticMerge) VoxelFilterGlobal();
+    mbFinalDone = true;
+
+    // Keyframes are never dropped silently, and clouds from different atlas
+    // maps would share one frame here, so say so.
+    {
+        std::set<unsigned long> maps;
+        for (const auto &sc : stored)
+            if (sc.pKF && sc.pKF->GetMap()) maps.insert(sc.pKF->GetMap()->GetId());
+        if (maps.size() > 1)
+            std::cerr << "[Dense] WARNING: keyframes come from " << maps.size()
+                      << " atlas maps; their clouds are merged in ONE frame, which is only "
+                         "valid if the maps were merged." << std::endl;
+        std::cout << "[Dense] keyframes: " << stored.size() << " stored, "
+                  << mnRescued.load() << " culled (rescued via parent), "
+                  << mnSkippedNoPose.load() << " lost (no live ancestor), "
+                  << mnEmptyCloud.load() << " gave an empty cloud" << std::endl;
+    }
 
     mFinalizeSeconds = std::chrono::duration<double>(clock::now() - t0).count();
     std::cout << "[Dense] final-pose reconstruction of " << stored.size()
@@ -1126,6 +1250,11 @@ size_t PointCloudMapping::CloudSize()
     if (!mpImpl) return 0;
     std::unique_lock<std::mutex> lock(mpImpl->mMutexCloud);
     return mpImpl->mpGlobalCloud ? mpImpl->mpGlobalCloud->size() : 0;
+}
+
+bool PointCloudMapping::NeedsFinalPoses() const
+{
+    return mpImpl && mpImpl->mCfg.enabled && mpImpl->mbStoreCam;
 }
 
 void PointCloudMapping::FinalizeOffline()
