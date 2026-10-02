@@ -60,6 +60,7 @@ REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
 sys.path.insert(0, HERE)
 
 SCHEMA = 1
+SCORE_KEYS = ("frames_se3", "frames_sim3", "kf_se3", "kf_sim3")
 rb = ev = metrics = lm = None  # run_benchmark & friends: imported by load_harness() (numpy is not on a bare host)
 
 
@@ -370,6 +371,9 @@ def wrap_argv(argv, use_stdbuf):
 
 def sequence_duration_s(cfg, seq, reg):
     """Playback length of a sequence in seconds from its timestamp file; None if unavailable."""
+    if "chain" in seq:
+        import chain_eval
+        return chain_eval.duration_s(cfg, seq, reg)
     try:
         if cfg["dataset"] == "euroc":
             path = os.path.join(rb.rpath(cfg["timestamps_dir"]), seq["times"])
@@ -530,6 +534,18 @@ def execute(plan_entry, ctx):
         entry["trajectory"] = os.path.relpath(traj, rb.REPO)
         kf = os.path.join(work, outputs["keyframes"]) if "keyframes" in outputs else None
         try:
+            if "chain" in seq:  # several sequences in one process: see chain_eval.py (validity = the maps merged)
+                import chain_eval
+                lmx = entry.get("log_metrics") or {}
+                ch = chain_eval.score(cfg, seq, ctx["reg"], traj, gt_path, lmx.get("maps_in_atlas"), lmx.get("merges_detected"))
+                entry["coverage"], entry["scores"], entry["chain"] = ch["coverage"], ch["scores"], ch["chain"]
+                if ch["valid"]:
+                    entry["status"], entry["ate_rmse"] = "ok", ch["ate_rmse"]
+                else:  # kept for the audit under chain.*; stats_compare.py drops it and flags the status
+                    entry["status"], entry["ate_rmse"] = "invalid_chain", None
+                    entry["error"] = "INVALID CHAIN: " + "; ".join(ch["chain"]["invalid_reasons"])
+                return entry, {"start": t_start, "end": t_end, "returncode": rc, "seconds": round(elapsed, 1),
+                               "status": entry["status"], "host": host, "log_check": entry.get("log_check")}
             res, scores, errors = score_run(cfg, gt_path, traj, kf)
             entry["status"] = "ok"
             entry["ate_rmse"] = res["ate"]["rmse"]
@@ -564,8 +580,8 @@ def update_report(report, cfg, seq_name, entry):
     if cfg.get("kitti_relative"):
         s["t_rel_pct"] = metrics.aggregate([e.get("t_rel_pct") for e in runs])
         s["r_rel_deg_per_100m"] = metrics.aggregate([e.get("r_rel_deg_per_100m") for e in runs])
-    s["scores"] = {k: metrics.aggregate([(e.get("scores") or {}).get(k) for e in runs])
-                   for k in ("frames_se3", "frames_sim3", "kf_se3", "kf_sim3")}
+    keys = list(SCORE_KEYS) + sorted({k for e in runs for k in (e.get("scores") or {})} - set(SCORE_KEYS))
+    s["scores"] = {k: metrics.aggregate([(e.get("scores") or {}).get(k) for e in runs]) for k in keys}
 
 
 def write_report(report, out_dir):
@@ -575,10 +591,21 @@ def write_report(report, out_dir):
              "| seq | frames SE(3) | frames Sim(3) | keyframes SE(3) | keyframes Sim(3) |", "|---|---|---|---|---|"]
     for name, s in report["sequences"].items():
         cells = []
-        for k in ("frames_se3", "frames_sim3", "kf_se3", "kf_sim3"):
+        for k in SCORE_KEYS:
             a = s.get("scores", {}).get(k, {})
             cells.append("—" if a.get("median") is None else "%.4f" % a["median"])
         extra.append("| %s | %s |" % (name, " | ".join(cells)))
+    chain_keys = sorted({k for s in report["sequences"].values() for k in s.get("scores", {})} - set(SCORE_KEYS))
+    if chain_keys:  # multi-sequence chains (chain_eval.py): the keys of the scores that are not the four above
+        extra += ["", "### chain scores (m, median over ok runs; ok = the maps merged, see chain_eval.py)", "",
+                  "| seq | " + " | ".join(chain_keys) + " | invalid |", "|---|" + "---|" * (len(chain_keys) + 1)]
+        for name, s in report["sequences"].items():
+            cells = []
+            for k in chain_keys:
+                a = s.get("scores", {}).get(k, {})
+                cells.append("—" if a.get("median") is None else "%.4f" % a["median"])
+            bad = sum(1 for e in s.get("runs", []) if e.get("status") == "invalid_chain")
+            extra.append("| %s | %s | %d/%d |" % (name, " | ".join(cells), bad, len(s.get("runs", []))))
     with open(os.path.join(out_dir, "results.md"), "w") as fh:
         fh.write(md + "\n".join(extra) + "\n")
 
@@ -643,6 +670,9 @@ def dry_run(args, reg, cfgs, arms, seqs, plan, bal):
                              ("sequence", seq_dir), ("ground truth", gt_path)):
                 if not os.path.exists(p):
                     missing.append("%s/%s: %s not found -> %s" % (arm, seq_name, label, p))
+            if "chain" in seq:
+                import chain_eval
+                missing += ["%s/%s: %s" % (arm, seq_name, m) for m in chain_eval.missing_inputs(cfg, seq, reg)]
             if first[arm] is None:
                 first[arm] = argv
                 print("[%s %s] %s" % (arm, seq_name, " ".join(wrap_argv(argv, not args.no_stdbuf))))
@@ -917,8 +947,8 @@ def main():
                     msg += "  LOG CHECK FAILED: " + log_check_text(rec["log_check"])
                 print(msg)
             else:
-                print("%s (rc=%s, %.0fs) -- see %s" % (entry["status"].upper(), entry["returncode"], entry["seconds"],
-                                                       entry["log"]))
+                print("%s (rc=%s, %.0fs) -- see %s%s" % (entry["status"].upper(), entry["returncode"], entry["seconds"],
+                                                         entry["log"], ("  [" + entry["error"] + "]") if entry.get("error") else ""))
     except (KeyboardInterrupt, Stop) as exc:
         print("\ninterrupted (%s): order.json and results.json are current up to the last finished run; "
               "re-run with --resume" % (str(exc) or "Ctrl-C"))

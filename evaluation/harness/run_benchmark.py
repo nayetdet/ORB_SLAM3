@@ -51,6 +51,9 @@ def load_registry(path=None):
 
 def build_invocation(cfg_name, cfg, seq_name, seq, reg, run_tag):
     """Return (argv, output_map) where output_map maps kind -> filename in cwd."""
+    if isinstance(seq, dict) and "chain" in seq:  # several sequences in one process (sequences_multi.yaml)
+        import chain_eval
+        return chain_eval.build_invocation(cfg, seq, reg, run_tag)
     vocab = rpath(reg["vocabulary"])
     root = rpath(reg["roots"][cfg["dataset"]])
     seq_dir = os.path.join(root, seq["folder"])
@@ -74,6 +77,9 @@ def build_invocation(cfg_name, cfg, seq_name, seq, reg, run_tag):
 
 
 def resolve_gt(cfg, seq, seq_dir, reg):
+    if isinstance(seq, dict) and "chain" in seq:
+        import chain_eval
+        return chain_eval.gt_file(cfg, seq, reg)
     if "gt_from_sequence" in cfg:
         return os.path.join(seq_dir, cfg["gt_from_sequence"])
     root = rpath(reg["roots"][cfg["dataset"]])

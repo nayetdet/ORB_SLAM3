@@ -439,7 +439,9 @@ def make_group(ds, arm, seq, metric, doc, results_dir):
         g["aggregate_check"] = {
             "json": {k: agg.get(k) for k in ("n", "median", "mean", "std")},
             "ok": bool(agg.get("n") == len(xs)
-                       and all(_finite(agg.get(k)) and math.isclose(agg[k], g[k], rel_tol=1e-9, abs_tol=1e-12)
+                       and all((agg.get(k) is None and g.get(k) is None)  # std of ONE run is None on both sides
+                               or (_finite(agg.get(k)) and _finite(g.get(k))
+                                   and math.isclose(agg[k], g[k], rel_tol=1e-9, abs_tol=1e-12))
                                for k in ("median", "mean", "std")))}
     return g
 

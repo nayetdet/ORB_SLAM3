@@ -328,6 +328,132 @@ configs:
     run_expect: ['Shutdown: waited']
 
 
+  # ---------------------------------------------------------------------------
+  # Confirmatory runs on TUM RGB-D (thesis Table IV) and KITTI (thesis Table VI): the same four arms as
+  # euroc_p_* (evaluation/PRE_REGISTRATION_tum_kitti.md). tum_p_* use Examples/RGB-D/TUM{1,2,3}_*Sync*.yaml
+  # (nFeatures 1000 as TUM{1,2,3}.yaml), kitti_p_* use Examples/Stereo/KITTI*_*Sync*.yaml (nFeatures 2000).
+  #   *_base      System.syncShutdown=1, no dense, no final BA
+  #   *_c1        base + GlobalBA.final=1
+  #   *_faithful  thesis dense (queueLimit 0, normal priority, pcl voxel filter) + syncShutdown=1
+  #   *_imp       queueLimit 3, lowPriority, GlobalBA.final=1, voxelSafe=1, syncShutdown=1
+  # check_yaml_pairs.py proves from the settings files that the arms differ only there.
+  # ---------------------------------------------------------------------------
+
+  tum_p_base:
+    dataset: tum
+    sensor: rgbd
+    align: se3
+    binary: Examples/RGB-D/rgbd_tum
+    associations_dir: Examples/RGB-D/associations
+    est_format: orb_tum
+    gt_format: gt_tum
+    gt_from_sequence: "groundtruth.txt"
+    max_diff: 0.02
+    preflight_expect: ['Features per image: 1000']
+    preflight_forbid: ['\[Dense\] reconstruction enabled']
+    run_expect: ['Shutdown: waited']
+    run_forbid: ['Final global bundle adjustment']
+
+  tum_p_c1:
+    dataset: tum
+    sensor: rgbd
+    align: se3
+    binary: Examples/RGB-D/rgbd_tum
+    associations_dir: Examples/RGB-D/associations
+    est_format: orb_tum
+    gt_format: gt_tum
+    gt_from_sequence: "groundtruth.txt"
+    max_diff: 0.02
+    preflight_expect: ['Features per image: 1000']
+    preflight_forbid: ['\[Dense\] reconstruction enabled']
+    run_expect: ['Shutdown: waited', 'Final global bundle adjustment done']
+
+  tum_p_faithful:
+    dataset: tum
+    sensor: rgbd
+    align: se3
+    binary: Examples/RGB-D/rgbd_tum
+    associations_dir: Examples/RGB-D/associations
+    est_format: orb_tum
+    gt_format: gt_tum
+    gt_from_sequence: "groundtruth.txt"
+    max_diff: 0.02
+    preflight_expect: ['Features per image: 1000', '\[Dense\] reconstruction enabled']
+    preflight_forbid: ['extensions\s*:']
+    run_expect: ['Shutdown: waited', 'Dense Reconstruction timing']
+    run_forbid: ['Final global bundle adjustment']
+
+  tum_p_imp:
+    dataset: tum
+    sensor: rgbd
+    align: se3
+    binary: Examples/RGB-D/rgbd_tum
+    associations_dir: Examples/RGB-D/associations
+    est_format: orb_tum
+    gt_format: gt_tum
+    gt_from_sequence: "groundtruth.txt"
+    max_diff: 0.02
+    preflight_expect: ['Features per image: 1000', '\[Dense\] reconstruction enabled', 'queueLimit=3 lowPriority=1', 'voxelSafe=1']
+    run_expect: ['Shutdown: waited', 'Final global bundle adjustment done', 'Dense Reconstruction timing']
+
+  kitti_p_base:
+    dataset: kitti
+    sensor: stereo
+    align: se3
+    binary: Examples/Stereo/stereo_kitti
+    est_format: orb_kitti
+    gt_format: gt_kitti
+    gt_template: "poses/{gt}"
+    max_diff: 0.5
+    kitti_relative: true
+    preflight_expect: ['Features per image: 2000']
+    preflight_forbid: ['\[Dense\] reconstruction enabled']
+    run_expect: ['Shutdown: waited']
+    run_forbid: ['Final global bundle adjustment']
+
+  kitti_p_c1:
+    dataset: kitti
+    sensor: stereo
+    align: se3
+    binary: Examples/Stereo/stereo_kitti
+    est_format: orb_kitti
+    gt_format: gt_kitti
+    gt_template: "poses/{gt}"
+    max_diff: 0.5
+    kitti_relative: true
+    preflight_expect: ['Features per image: 2000']
+    preflight_forbid: ['\[Dense\] reconstruction enabled']
+    run_expect: ['Shutdown: waited', 'Final global bundle adjustment done']
+
+  kitti_p_faithful:
+    dataset: kitti
+    sensor: stereo
+    align: se3
+    binary: Examples/Stereo/stereo_kitti
+    est_format: orb_kitti
+    gt_format: gt_kitti
+    gt_template: "poses/{gt}"
+    max_diff: 0.5
+    kitti_relative: true
+    preflight_expect: ['Features per image: 2000', '\[Dense\] reconstruction enabled']
+    preflight_forbid: ['extensions\s*:']
+    run_expect: ['Shutdown: waited', 'Dense Reconstruction timing']
+    run_forbid: ['Final global bundle adjustment']
+
+  kitti_p_imp:
+    dataset: kitti
+    sensor: stereo
+    align: se3
+    binary: Examples/Stereo/stereo_kitti
+    est_format: orb_kitti
+    gt_format: gt_kitti
+    gt_template: "poses/{gt}"
+    max_diff: 0.5
+    kitti_relative: true
+    preflight_expect: ['Features per image: 2000', '\[Dense\] reconstruction enabled', 'queueLimit=3 lowPriority=1', 'voxelSafe=1']
+    run_expect: ['Shutdown: waited', 'Final global bundle adjustment done', 'Dense Reconstruction timing']
+
+
 # ---------------------------------------------------------------------------
 # Sequences. `folder` is relative to the dataset root.
 # ---------------------------------------------------------------------------
@@ -506,6 +632,88 @@ sequences:
     "08": {folder: sequences/08, gt: "08.txt", settings: Examples/Stereo/KITTI04-12_Sync.yaml}
     "09": {folder: sequences/09, gt: "09.txt", settings: Examples/Stereo/KITTI04-12_Sync.yaml}
     "10": {folder: sequences/10, gt: "10.txt", settings: Examples/Stereo/KITTI04-12_Sync.yaml}
+
+  # --- confirmatory TUM / KITTI arms (see configs above) ---
+
+  tum_p_base:
+    fr1_desk:          {folder: rgbd_dataset_freiburg1_desk, assoc: fr1_desk.txt, settings: Examples/RGB-D/TUM1_Sync.yaml}
+    fr1_room:          {folder: rgbd_dataset_freiburg1_room, assoc: fr1_room.txt, settings: Examples/RGB-D/TUM1_Sync.yaml}
+    fr2_desk:          {folder: rgbd_dataset_freiburg2_desk, assoc: fr2_desk.txt, settings: Examples/RGB-D/TUM2_Sync.yaml}
+    fr2_large_no_loop: {folder: rgbd_dataset_freiburg2_large_no_loop, assoc: fr2_large_no_loop.txt, settings: Examples/RGB-D/TUM2_Sync.yaml}
+    fr3_office:        {folder: rgbd_dataset_freiburg3_long_office_household, assoc: fr3_office.txt, settings: Examples/RGB-D/TUM3_Sync.yaml}
+
+  tum_p_c1:
+    fr1_desk:          {folder: rgbd_dataset_freiburg1_desk, assoc: fr1_desk.txt, settings: Examples/RGB-D/TUM1_Sync_C1.yaml}
+    fr1_room:          {folder: rgbd_dataset_freiburg1_room, assoc: fr1_room.txt, settings: Examples/RGB-D/TUM1_Sync_C1.yaml}
+    fr2_desk:          {folder: rgbd_dataset_freiburg2_desk, assoc: fr2_desk.txt, settings: Examples/RGB-D/TUM2_Sync_C1.yaml}
+    fr2_large_no_loop: {folder: rgbd_dataset_freiburg2_large_no_loop, assoc: fr2_large_no_loop.txt, settings: Examples/RGB-D/TUM2_Sync_C1.yaml}
+    fr3_office:        {folder: rgbd_dataset_freiburg3_long_office_household, assoc: fr3_office.txt, settings: Examples/RGB-D/TUM3_Sync_C1.yaml}
+
+  tum_p_faithful:
+    fr1_desk:          {folder: rgbd_dataset_freiburg1_desk, assoc: fr1_desk.txt, settings: Examples/RGB-D/TUM1_Dense_Sync.yaml}
+    fr1_room:          {folder: rgbd_dataset_freiburg1_room, assoc: fr1_room.txt, settings: Examples/RGB-D/TUM1_Dense_Sync.yaml}
+    fr2_desk:          {folder: rgbd_dataset_freiburg2_desk, assoc: fr2_desk.txt, settings: Examples/RGB-D/TUM2_Dense_Sync.yaml}
+    fr2_large_no_loop: {folder: rgbd_dataset_freiburg2_large_no_loop, assoc: fr2_large_no_loop.txt, settings: Examples/RGB-D/TUM2_Dense_Sync.yaml}
+    fr3_office:        {folder: rgbd_dataset_freiburg3_long_office_household, assoc: fr3_office.txt, settings: Examples/RGB-D/TUM3_Dense_Sync.yaml}
+
+  tum_p_imp:
+    fr1_desk:          {folder: rgbd_dataset_freiburg1_desk, assoc: fr1_desk.txt, settings: Examples/RGB-D/TUM1_Dense_Imp_Sync.yaml}
+    fr1_room:          {folder: rgbd_dataset_freiburg1_room, assoc: fr1_room.txt, settings: Examples/RGB-D/TUM1_Dense_Imp_Sync.yaml}
+    fr2_desk:          {folder: rgbd_dataset_freiburg2_desk, assoc: fr2_desk.txt, settings: Examples/RGB-D/TUM2_Dense_Imp_Sync.yaml}
+    fr2_large_no_loop: {folder: rgbd_dataset_freiburg2_large_no_loop, assoc: fr2_large_no_loop.txt, settings: Examples/RGB-D/TUM2_Dense_Imp_Sync.yaml}
+    fr3_office:        {folder: rgbd_dataset_freiburg3_long_office_household, assoc: fr3_office.txt, settings: Examples/RGB-D/TUM3_Dense_Imp_Sync.yaml}
+
+  kitti_p_base:
+    "00": {folder: sequences/00, gt: "00.txt", settings: Examples/Stereo/KITTI00-02_Sync.yaml}
+    "01": {folder: sequences/01, gt: "01.txt", settings: Examples/Stereo/KITTI00-02_Sync.yaml}
+    "02": {folder: sequences/02, gt: "02.txt", settings: Examples/Stereo/KITTI00-02_Sync.yaml}
+    "03": {folder: sequences/03, gt: "03.txt", settings: Examples/Stereo/KITTI03_Sync.yaml}
+    "04": {folder: sequences/04, gt: "04.txt", settings: Examples/Stereo/KITTI04-12_Sync.yaml}
+    "05": {folder: sequences/05, gt: "05.txt", settings: Examples/Stereo/KITTI04-12_Sync.yaml}
+    "06": {folder: sequences/06, gt: "06.txt", settings: Examples/Stereo/KITTI04-12_Sync.yaml}
+    "07": {folder: sequences/07, gt: "07.txt", settings: Examples/Stereo/KITTI04-12_Sync.yaml}
+    "08": {folder: sequences/08, gt: "08.txt", settings: Examples/Stereo/KITTI04-12_Sync.yaml}
+    "09": {folder: sequences/09, gt: "09.txt", settings: Examples/Stereo/KITTI04-12_Sync.yaml}
+    "10": {folder: sequences/10, gt: "10.txt", settings: Examples/Stereo/KITTI04-12_Sync.yaml}
+
+  kitti_p_c1:
+    "00": {folder: sequences/00, gt: "00.txt", settings: Examples/Stereo/KITTI00-02_Sync_C1.yaml}
+    "01": {folder: sequences/01, gt: "01.txt", settings: Examples/Stereo/KITTI00-02_Sync_C1.yaml}
+    "02": {folder: sequences/02, gt: "02.txt", settings: Examples/Stereo/KITTI00-02_Sync_C1.yaml}
+    "03": {folder: sequences/03, gt: "03.txt", settings: Examples/Stereo/KITTI03_Sync_C1.yaml}
+    "04": {folder: sequences/04, gt: "04.txt", settings: Examples/Stereo/KITTI04-12_Sync_C1.yaml}
+    "05": {folder: sequences/05, gt: "05.txt", settings: Examples/Stereo/KITTI04-12_Sync_C1.yaml}
+    "06": {folder: sequences/06, gt: "06.txt", settings: Examples/Stereo/KITTI04-12_Sync_C1.yaml}
+    "07": {folder: sequences/07, gt: "07.txt", settings: Examples/Stereo/KITTI04-12_Sync_C1.yaml}
+    "08": {folder: sequences/08, gt: "08.txt", settings: Examples/Stereo/KITTI04-12_Sync_C1.yaml}
+    "09": {folder: sequences/09, gt: "09.txt", settings: Examples/Stereo/KITTI04-12_Sync_C1.yaml}
+    "10": {folder: sequences/10, gt: "10.txt", settings: Examples/Stereo/KITTI04-12_Sync_C1.yaml}
+
+  kitti_p_faithful:
+    "00": {folder: sequences/00, gt: "00.txt", settings: Examples/Stereo/KITTI00-02_Dense_Sync.yaml}
+    "01": {folder: sequences/01, gt: "01.txt", settings: Examples/Stereo/KITTI00-02_Dense_Sync.yaml}
+    "02": {folder: sequences/02, gt: "02.txt", settings: Examples/Stereo/KITTI00-02_Dense_Sync.yaml}
+    "03": {folder: sequences/03, gt: "03.txt", settings: Examples/Stereo/KITTI03_Dense_Sync.yaml}
+    "04": {folder: sequences/04, gt: "04.txt", settings: Examples/Stereo/KITTI04-12_Dense_Sync.yaml}
+    "05": {folder: sequences/05, gt: "05.txt", settings: Examples/Stereo/KITTI04-12_Dense_Sync.yaml}
+    "06": {folder: sequences/06, gt: "06.txt", settings: Examples/Stereo/KITTI04-12_Dense_Sync.yaml}
+    "07": {folder: sequences/07, gt: "07.txt", settings: Examples/Stereo/KITTI04-12_Dense_Sync.yaml}
+    "08": {folder: sequences/08, gt: "08.txt", settings: Examples/Stereo/KITTI04-12_Dense_Sync.yaml}
+    "09": {folder: sequences/09, gt: "09.txt", settings: Examples/Stereo/KITTI04-12_Dense_Sync.yaml}
+    "10": {folder: sequences/10, gt: "10.txt", settings: Examples/Stereo/KITTI04-12_Dense_Sync.yaml}
+
+  kitti_p_imp:
+    "00": {folder: sequences/00, gt: "00.txt", settings: Examples/Stereo/KITTI00-02_Dense_Imp_Sync.yaml}
+    "01": {folder: sequences/01, gt: "01.txt", settings: Examples/Stereo/KITTI00-02_Dense_Imp_Sync.yaml}
+    "02": {folder: sequences/02, gt: "02.txt", settings: Examples/Stereo/KITTI00-02_Dense_Imp_Sync.yaml}
+    "03": {folder: sequences/03, gt: "03.txt", settings: Examples/Stereo/KITTI03_Dense_Imp_Sync.yaml}
+    "04": {folder: sequences/04, gt: "04.txt", settings: Examples/Stereo/KITTI04-12_Dense_Imp_Sync.yaml}
+    "05": {folder: sequences/05, gt: "05.txt", settings: Examples/Stereo/KITTI04-12_Dense_Imp_Sync.yaml}
+    "06": {folder: sequences/06, gt: "06.txt", settings: Examples/Stereo/KITTI04-12_Dense_Imp_Sync.yaml}
+    "07": {folder: sequences/07, gt: "07.txt", settings: Examples/Stereo/KITTI04-12_Dense_Imp_Sync.yaml}
+    "08": {folder: sequences/08, gt: "08.txt", settings: Examples/Stereo/KITTI04-12_Dense_Imp_Sync.yaml}
+    "09": {folder: sequences/09, gt: "09.txt", settings: Examples/Stereo/KITTI04-12_Dense_Imp_Sync.yaml}
+    "10": {folder: sequences/10, gt: "10.txt", settings: Examples/Stereo/KITTI04-12_Dense_Imp_Sync.yaml}
 
 # ---------------------------------------------------------------------------
 # Baselines from the literature, for the comparison table. These are reference

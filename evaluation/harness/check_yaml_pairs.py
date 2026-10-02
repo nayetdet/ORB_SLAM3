@@ -39,25 +39,42 @@ PAIRS = [
     ("euroc_p_imp", "euroc_p_base", ["Dense.*", "GlobalBA.final"]),  # dense_imp = Dense.* + final BA
     ("kitti_s_sync", "kitti_s_nosync", ["System.syncShutdown"]),     # shutdown-synchronisation check
 ]
+# The same four-arm design on TUM RGB-D and KITTI (evaluation/PRE_REGISTRATION_tum_kitti.md).
+for _p in ("tum_p", "kitti_p"):
+    PAIRS += [(_p + "_c1", _p + "_base", ["GlobalBA.final"]),
+              (_p + "_faithful", _p + "_base", ["Dense.*"]),
+              (_p + "_imp", _p + "_base", ["Dense.*", "GlobalBA.final"])]
 
 # Values that must hold whatever the pair says (key -> value) for every file of the arm.
 COMMON_EUROC = {"ORBextractor.nFeatures": 1000, "System.UseViewer": 0, "System.syncShutdown": 1}
+COMMON_TUM = dict(COMMON_EUROC)                                   # TUM{1,2,3}.yaml keep 1000 features
+COMMON_KITTI = dict(COMMON_EUROC, **{"ORBextractor.nFeatures": 2000})  # KITTI*.yaml keep 2000 features
 THESIS_FAITHFUL_DENSE = {
     "Dense.enabled": 1, "Dense.queueLimit": 0, "Dense.lowPriority": 0, "Dense.mode": "online",
     "Dense.reprojectOptimized": 0, "Dense.octomapAtEnd": 0, "Dense.octomapRayCast": 0, "Dense.outlierRemoval": 0,
     "Dense.wlsFilter": 0, "Dense.probabilisticMerge": 0, "Dense.voxelSafe": 0, "GlobalBA.final": OFF,
 }
-EXPECT = {
-    "euroc_p_base": dict(COMMON_EUROC, **{"Dense.enabled": 0, "GlobalBA.final": OFF}),
-    "euroc_p_base_b": dict(COMMON_EUROC, **{"Dense.enabled": 0, "GlobalBA.final": OFF}),
-    "euroc_p_c1": dict(COMMON_EUROC, **{"Dense.enabled": 0, "GlobalBA.final": 1}),
-    "euroc_p_faithful": dict(COMMON_EUROC, **THESIS_FAITHFUL_DENSE),
-    "euroc_p_imp": dict(COMMON_EUROC, **{"Dense.enabled": 1, "Dense.queueLimit": 3, "Dense.lowPriority": 1,
+
+
+def arm_expectations(prefix, common):
+    return {
+        prefix + "_base": dict(common, **{"Dense.enabled": 0, "GlobalBA.final": OFF}),
+        prefix + "_c1": dict(common, **{"Dense.enabled": 0, "GlobalBA.final": 1}),
+        prefix + "_faithful": dict(common, **THESIS_FAITHFUL_DENSE),
+        prefix + "_imp": dict(common, **{"Dense.enabled": 1, "Dense.queueLimit": 3, "Dense.lowPriority": 1,
                                          "Dense.mode": "online", "Dense.voxelSafe": 1, "GlobalBA.final": 1,
                                          "Dense.reprojectOptimized": 0, "Dense.octomapAtEnd": 0}),
+    }
+
+
+EXPECT = {
+    "euroc_p_base_b": dict(COMMON_EUROC, **{"Dense.enabled": 0, "GlobalBA.final": OFF}),
     "kitti_s_nosync": {"System.syncShutdown": OFF, "Dense.enabled": 0, "GlobalBA.final": OFF},
     "kitti_s_sync": {"System.syncShutdown": 1, "Dense.enabled": 0, "GlobalBA.final": OFF},
 }
+EXPECT.update(arm_expectations("euroc_p", COMMON_EUROC))
+EXPECT.update(arm_expectations("tum_p", COMMON_TUM))
+EXPECT.update(arm_expectations("kitti_p", COMMON_KITTI))
 
 
 def rpath(p):

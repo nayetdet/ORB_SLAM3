@@ -1,0 +1,135 @@
+%YAML:1.0
+
+#--------------------------------------------------------------------------------------------
+# Camera Parameters. Adjust them!
+#--------------------------------------------------------------------------------------------
+File.version: "1.0"
+
+Camera.type: "Rectified"
+
+# Camera calibration and distortion parameters (OpenCV) 
+Camera1.fx: 707.0912
+Camera1.fy: 707.0912
+Camera1.cx: 601.8873
+Camera1.cy: 183.1104
+
+Camera.width: 1241
+Camera.height: 376
+
+# Camera frames per second 
+Camera.fps: 10
+
+Stereo.b: 0.53715
+
+# Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
+Camera.RGB: 1
+
+# Close/Far threshold. Baseline times.
+Stereo.ThDepth: 40.0
+
+#--------------------------------------------------------------------------------------------
+# ORB Parameters
+#--------------------------------------------------------------------------------------------
+
+# ORB Extractor: Number of features per image
+ORBextractor.nFeatures: 2000
+
+# ORB Extractor: Scale factor between levels in the scale pyramid 	
+ORBextractor.scaleFactor: 1.2
+
+# ORB Extractor: Number of levels in the scale pyramid	
+ORBextractor.nLevels: 8
+
+# ORB Extractor: Fast threshold
+# Image is divided in a grid. At each cell FAST are extracted imposing a minimum response.
+# Firstly we impose iniThFAST. If no corners are detected we impose a lower value minThFAST
+# You can lower these values if your images have low contrast			
+ORBextractor.iniThFAST: 12
+ORBextractor.minThFAST: 7
+
+#--------------------------------------------------------------------------------------------
+# Viewer Parameters
+#--------------------------------------------------------------------------------------------
+Viewer.KeyFrameSize: 0.6
+Viewer.KeyFrameLineWidth: 2.0
+Viewer.GraphLineWidth: 1.0
+Viewer.PointSize: 2.0
+Viewer.CameraSize: 0.7
+Viewer.CameraLineWidth: 3.0
+Viewer.ViewpointX: 0.0
+Viewer.ViewpointY: -100.0
+Viewer.ViewpointZ: -0.1
+Viewer.ViewpointF: 2000.0
+
+
+#--------------------------------------------------------------------------------------------
+# Dense Reconstruction (Zhang 2023, ch. 3) -- optional, off by default.
+# Set Dense.enabled to 1 to reproduce the thesis pipeline. With 0 the system is
+# bit-for-bit stock ORB-SLAM3 and the dense thread is never created.
+#--------------------------------------------------------------------------------------------
+Dense.enabled: 0
+
+# Voxel grid leaf size [m]. Sec. 3.2 removes "more than 90% of the voxels" here.
+Dense.resolution: 0.1
+
+# d_min / d_max of eq. (34): the depth range a point must fall in to be used,
+# and the range over which its confidence is interpolated.
+Dense.depthMin: 1.0
+Dense.depthMax: 40.0
+
+# Sec. 3.5: probabilistic merge. Turn on for multi-sequence runs; P_max is the
+# confidence at d_min (P_min = 1 - P_max). mergeDistance 0 means "use resolution".
+Dense.probabilisticMerge: 0
+Dense.probMax: 0.9
+Dense.mergeDistance: 0.0
+
+# Prior cloud to merge into, for the second and later sequences of a
+# multi-sequence run (sec. 3.5). Empty means start from scratch.
+Dense.loadCloud: ""
+
+# Octomap, sec. 3.4. Thesis 4.4: ~0.01 m indoors, >=0.05 m outdoors (0.2 typical).
+# Ray casting carves free space (eq. 31-33) but makes the .ot bigger than
+# the .pcd. Table IX reports the octomap 4.8-6.5x smaller, so it is off by
+# default to match. Turn on for a navigable occupancy map.
+Dense.octomapRayCast: 0
+Dense.octomapEnabled: 1
+Dense.octomapResolution: 0.2
+
+# Output: <saveDirectory>/<savePrefix>_cloud.pcd and _octomap.ot
+Dense.saveDirectory: "."
+Dense.savePrefix: "kitti"
+
+# Stereo only (Algorithm 2). numDisparities must be divisible by 16, blockSize odd.
+Dense.sgbmNumDisparities: 128
+Dense.sgbmBlockSize: 9
+# ROI margins (Algorithm 2 line 13), trimming the invalid rectification border.
+Dense.roiMarginX: 0
+Dense.roiMarginY: 0
+# Sec. 4.2: stereo images are greyscale, so points are rainbow-coloured by depth
+# (far = red). Set to 0 to use a single solid colour instead, which sec. 3.3 notes
+# is preferable when merging several sequences of the same scene.
+Dense.colorizeByDepth: 1
+Dense.solidColor: [200, 200, 200]
+
+#--------------------------------------------------------------------------------------------
+# System.UseViewer: 0 disables the Pangolin window. Required on a headless machine,
+# and it should be 0 for accuracy benchmarks anyway -- the viewer competes for CPU
+# with Local BA, which changes the ATE.
+#--------------------------------------------------------------------------------------------
+System.UseViewer: 0
+
+#--------------------------------------------------------------------------------------------
+# System.syncShutdown: 1 makes System::Shutdown() wait for LocalMapping, LoopClosing and any
+# running global BA to finish before it returns, in every arm of the pilot, so that the
+# trajectory is saved from the same settled map whether or not an arm has dense or final-BA
+# work at shutdown. 0 (the default) keeps the original behaviour, in which a plain baseline
+# returns at once. The wait is logged as "Shutdown: waited X s".
+#--------------------------------------------------------------------------------------------
+System.syncShutdown: 1
+
+#--------------------------------------------------------------------------------------------
+# C1 (melhorias.md): one global bundle adjustment in System::Shutdown(), before the trajectory
+# is saved. Baseline + C1 isolates what the final GBA alone gives, so that a gain of
+# the *_Dense_Imp_Sync.yaml of the same sequence group (which also sets it) can be split into C1 and A1/A2.
+#--------------------------------------------------------------------------------------------
+GlobalBA.final: 1

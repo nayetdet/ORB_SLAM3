@@ -265,6 +265,21 @@ measurement, and decide before the confirmatory runs which value excludes a run.
 `runNN.attemptK/`. The SLAM command is wrapped in `stdbuf -oL -eL`, so a crash or a kill does not lose the
 buffered log (the 2046 s hung run of the first campaign left a 0-byte log).
 
+## Extra experiments: unpaced FPS and multi-sequence chains (`evaluation/run_extra.sh`)
+
+* **Unpaced FPS.** `ORB_NO_PACING=1` makes `rgbd_tum`, `stereo_euroc` and `stereo_kitti` skip the `usleep` to the dataset
+  timestamps (unset = unchanged). They always print `Processed N frames in X.XX s = Y.YY fps` (N frames over the wall-clock,
+  monotonic time of the frame loop, image loading included, `Shutdown` excluded); `log_metrics.py` reads it as
+  `fps`, `fps_loop_s` and `frame_time_ms` (the cost form, for `stats_compare.py --metrics log_metrics.frame_time_ms`).
+  Registry `sequences_fps.yaml` (arms `*_f_base|c1|faithful|imp`; TUM fr1_desk, EuRoC MH01, KITTI 07).
+* **Chains** (`sequences_multi.yaml`, scoring in `chain_eval.py`): several sequences in ONE process (`stereo_euroc` always
+  could; `rgbd_tum` does with 4+2k arguments), so ORB-SLAM3 merges the maps. A run is `invalid_chain` (dropped and flagged by
+  `stats_compare.py`) if the log says more than one map in the atlas or a sequence has < 50 % of its frames in the saved
+  trajectory (the EuRoC-style trajectory holds the biggest map only). Primary `ate_rmse` = ATE of the LAST sequence (Table VII);
+  `scores.last_mean_m`, `scores.chain_se3`, `scores.last_in_chain_se3`, `scores.seg_<seq>` are the others.
+* `make_extra_settings.py` writes the TUM / KITTI arm settings and the `*_Multi` dense files (new files only);
+  `extra_report.py fps|multi --results DIR` prints the tables (no numpy). Test with `chain_eval.py` (self-test, needs numpy).
+
 ## Not verified here, and limits
 
 * The C++ side of `System.syncShutdown` and `Dense.voxelSafe` was still being written when these tools were made, so

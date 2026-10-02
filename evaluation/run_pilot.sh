@@ -1,7 +1,7 @@
 #!/bin/bash
 # Interleaved, CPU-limited pilot: guards, preflight, then run_interleaved.py in the orb_slam3:dense image.
 #
-#   evaluation/run_pilot.sh [--experiment euroc|kitti] [--dry-run] [--plan] [--force] [options]
+#   evaluation/run_pilot.sh [--experiment euroc|kitti|tum|kitti_confirm] [--dry-run] [--plan] [--force] [options]
 #
 # What a real run does, in this order:
 #   0. refuses to start if the disk of ORB_WORK has less than ORB_MIN_FREE_GB (10) free, if a container of
@@ -16,6 +16,10 @@
 # Experiments (arms and sequences can be overridden with --arms / --sequences):
 #   euroc  euroc_p_base, euroc_p_base_b (A/A replicate), euroc_p_c1, euroc_p_faithful, euroc_p_imp on MH01,MH04,V103
 #   kitti  kitti_s_nosync, kitti_s_sync (shutdown-synchronisation check) on 09,07
+#   tum    tum_p_base, tum_p_c1, tum_p_faithful, tum_p_imp on fr1_desk,fr1_room,fr2_desk,fr2_large_no_loop,fr3_office
+#          (thesis Table IV; evaluation/PRE_REGISTRATION_tum_kitti.md: --runs 12 --seed 13)
+#   kitti_confirm  kitti_p_base, kitti_p_c1, kitti_p_faithful, kitti_p_imp on KITTI 00-10 (thesis Table VI;
+#          the same pre-registration: --runs 4 --seed 17)
 #
 # Options (environment variable in brackets):
 #   --runs N          runs per arm and sequence [ORB_RUNS, 10]; a multiple of the number of design rows
@@ -37,8 +41,10 @@
 #   ORB_ULIMIT_NICE [40:40]       docker --ulimit nice=...: see the note at the docker flags; empty = off
 #   ORB_MIN_FREE_GB [10]  ORB_HEAVY_PCT [20]  ORB_PREFLIGHT_SECS [25]  ORB_LOG_DIR [ORB_WORK/logs]
 #
-# Exit status: 0 done; 1 refused by a guard; 2 usage error or failed preflight / plan; otherwise the status of
-# run_interleaved.py (1 = finished with failed runs, 3 = stopped on low disk, 130 = interrupted; resume with --resume).
+# Exit status: 0 done; 75 refused by a guard (nothing was run: safe to retry later); 2 usage error or failed
+# preflight / plan; otherwise the status of run_interleaved.py (1 = finished with failed runs, 3 = stopped on low
+# disk, 130 = interrupted; resume with --resume). Guard refusal used to be 1, the same code as "finished with
+# failed runs": a retry loop must only retry 75.
 
 set -u -o pipefail
 
@@ -85,7 +91,11 @@ case "$EXPERIMENT" in
          BASELINE=euroc_p_base; NULL_ARMS=euroc_p_base_b; PAIRS=euroc_p_c1:euroc_p_imp,euroc_p_faithful:euroc_p_imp ;;
   kitti) : "${ARMS:=kitti_s_nosync,kitti_s_sync}"; : "${SEQS:=09,07}"
          BASELINE=kitti_s_nosync; NULL_ARMS=""; PAIRS="" ;;
-  *) die "--experiment must be euroc or kitti" ;;
+  tum)   : "${ARMS:=tum_p_base,tum_p_c1,tum_p_faithful,tum_p_imp}"; : "${SEQS:=fr1_desk,fr1_room,fr2_desk,fr2_large_no_loop,fr3_office}"
+         BASELINE=tum_p_base; NULL_ARMS=""; PAIRS=tum_p_c1:tum_p_imp,tum_p_faithful:tum_p_imp ;;
+  kitti_confirm) : "${ARMS:=kitti_p_base,kitti_p_c1,kitti_p_faithful,kitti_p_imp}"; : "${SEQS:=00,01,02,03,04,05,06,07,08,09,10}"
+         BASELINE=kitti_p_base; NULL_ARMS=""; PAIRS=kitti_p_c1:kitti_p_imp,kitti_p_faithful:kitti_p_imp ;;
+  *) die "--experiment must be euroc, kitti, tum or kitti_confirm" ;;
 esac
 [ "$RUNS" -ge 1 ] 2>/dev/null || die "--runs must be a positive integer"
 
@@ -226,7 +236,7 @@ host_state
 
 if [ "$FORCE" = 1 ]; then echo "guards skipped (--force)"
 else
-  check_guards || { echo "run_pilot: refusing to start (see above). Free the machine, or pass --force to override."; exit 1; }
+  check_guards || { echo "run_pilot: refusing to start (see above). Free the machine, or pass --force to override."; exit 75; }
 fi
 
 run_docker() {  # run_docker NAME ARGS...  (inside the inhibitor)

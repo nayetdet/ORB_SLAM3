@@ -22,6 +22,12 @@ Keys (all flat, so they can be addressed as log_metrics.<key> by stats_compare.p
         number of decimals actually printed: a value of 2 or less is the stream-state
         rounding of the dense arms (std::fixed << setprecision(2) leaks into later
         output), flagged by tracking_time_low_precision.
+  fps, fps_frames, fps_loop_s, frame_time_ms   "Processed N frames in X.XX s = Y.YY fps", printed by the example
+        executables (rgbd_tum, stereo_euroc, stereo_kitti) always: N frames / wall-clock time of the frame loop
+        (monotonic clock; image loading and, unless ORB_NO_PACING=1, the sleeps to the dataset timestamps included;
+        Shutdown excluded). frame_time_ms = 1000 * X / N is the cost form (lower = better) of fps for stats_compare.py.
+        With several such lines (never so far) the last wins. fps_unpaced: True when the log has the
+        "ORB_NO_PACING=1" notice.
   keyframes_total, maps_in_atlas       "Map N has K KFs" lines, summed.
   loops_detected, merges_detected      "*Loop detected" / "*Merge detected".
   local_mapping_stops                  "Local Mapping STOP" (loop/merge bookkeeping).
@@ -69,6 +75,7 @@ RE_TRACK = re.compile(r"^\s*(mean|median)\s+tracking\s+time\s*(?:[\[(]\s*(ms|s)\
                       re.I)
 RE_MAP_KFS = re.compile(r"^\s*Map\s+\d+\s+has\s+(\d+)\s+KFs")
 RE_ATLAS_MAPS = re.compile(r"^There are\s+(\d+)\s+maps in the atlas")
+RE_FPS = re.compile(r"^Processed\s+(\d+)\s+frames\s+in\s+(" + NUM + r")\s*s\s*=\s*(" + NUM + r")\s*fps\b")
 RE_NEW_MAP = re.compile(r"^New Map created with\s+(\d+)\s+points")
 RE_FRAMES_LOST = re.compile(r"^(\d+)\s+Frames set to lost")
 RE_FINAL_GBA_ON = re.compile(r"^Final global bundle adjustment on map\s+\d+")
@@ -185,6 +192,7 @@ def parse_log(text):
     m = {
         "tracking_time_mean_s": None, "tracking_time_median_s": None,
         "tracking_time_decimals": None, "tracking_time_low_precision": None,
+        "fps": None, "fps_frames": None, "fps_loop_s": None, "frame_time_ms": None, "fps_unpaced": False,
         "keyframes_total": None, "maps_in_atlas": None,
         "loops_detected": 0, "merges_detected": 0, "local_mapping_stops": 0,
         "map_inits": 0, "reinit_count": None, "init_points_first": None,
@@ -253,6 +261,14 @@ def parse_log(text):
         elif s.startswith("Saving") and "trajectory" in s:
             m["saved_trajectory"] = True
 
+        fp = RE_FPS.match(s)
+        if fp:
+            m["fps_frames"], m["fps_loop_s"], m["fps"] = int(fp.group(1)), float(fp.group(2)), float(fp.group(3))
+            if m["fps_frames"] > 0 and m["fps_loop_s"] > 0:
+                m["frame_time_ms"] = 1000.0 * m["fps_loop_s"] / m["fps_frames"]
+            continue
+        if s.startswith("ORB_NO_PACING=1"):
+            m["fps_unpaced"] = True
         nm = RE_NEW_MAP.match(s)
         if nm:
             m["map_inits"] += 1
@@ -534,6 +550,13 @@ def run_self_test(logs_root=None):
     check("dense imp sample: keyframes / init / re-init", (m["keyframes_total"], m["map_inits"], m["reinit_count"]) == (150, 1, 0))
     check("a count is 0, an absent fact is None: no waited line, no summary, no tracking time",
           m["shutdown_waited_s"] is None and m["voxel_filter_calls"] is None and m["tracking_time_mean_s"] is None)
+
+    m, _ = parse_log("ORB_NO_PACING=1: not sleeping to the dataset timestamps\nProcessed 573 frames in 14.25 s = 40.21 fps\n")
+    check("fps line: frames, loop seconds, fps, ms per frame, unpaced notice",
+          (m["fps_frames"], m["fps_loop_s"], m["fps"], m["fps_unpaced"]) == (573, 14.25, 40.21, True)
+          and abs(m["frame_time_ms"] - 24.8691099) < 1e-4)
+    m, _ = parse_log("Start processing sequence ...\n")
+    check("no fps line: None, not 0", m["fps"] is None and m["frame_time_ms"] is None and m["fps_unpaced"] is False)
 
     m, _ = parse_log("median tracking time: 0.0388889\nmean tracking time: 0.0370427\n")
     check("tracking time, default stream precision", m["tracking_time_median_s"] == 0.0388889
