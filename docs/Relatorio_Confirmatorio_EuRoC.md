@@ -84,3 +84,20 @@ Ressalvas: hardware diferente (Ryzen 5 4600G limitado a 2 núcleos contra i7-750
 3. **Nada pior / melhorar ao menos uma métrica:** imp melhora o ATE do baseline com significância após Holm em 1 sequência(s) (MH02) e com p bruto em 4; **não houve piora significativa** em nenhuma sequência (0 com p<0,05), mas o IC95% superior da razão passa de 1,10 em 3 sequências, então a não-inferioridade não está estabelecida em todas com n=12.
 4. **O que é por construção:** o filtro de voxel corrigido e o ajuste final são deterministas; o custo é tempo de parede (seção 7).
 5. **Limites:** só EuRoC; TUM e KITTI não entram nesta rodada; 4 falhas isoladas; sem alinhamento da tese; nada commitado.
+
+## 9. Tabela resumo: denso melhorado contra baseline
+
+Gráfico comparativo: `docs/comparativo_metricas_euroc.png` (precisão por sequência com IC95% e tamanho da nuvem).
+
+| Seq | Baseline (m) | Denso melhorado (m) | Variação (p bruto) | Melhorou? | Nuvem |
+|---|---|---|---|---|---|
+| MH01 | 0,0410 | 0,0312 | −24% (0,021) | 🟢 Sim (p bruto) | −3% |
+| MH02 | 0,0243 | 0,0153 | −37% (<0,001) | ✅ Sim, sólido (Holm) | −3% |
+| MH03 | 0,0353 | 0,0333 | −5,5% (0,42) | ➖ Igual (tendência) | −33% |
+| MH04 | 0,0725 | 0,0532 | −27% (0,012) | 🟢 Sim (p bruto) | −53% |
+| MH05 | 0,0626 | 0,0554 | −12% (0,54) | ➖ Igual (tendência) | −51% |
+| V101 | 0,0365 | 0,0363 | −0,4% (0,91) | ➖ Igual | −12% |
+| V102 | 0,0436 | 0,0301 | −31% (0,012) | 🟢 Sim (p bruto) | −4% |
+| V103 | 0,1046 | 0,1123 | +7% (0,98) | ⚠️ Igual, sem garantia (IC95% da razão até 1,60) | −5% |
+
+✅ passa também na correção de Holm (24 comparações); 🟢 p bruto < 0,05 sem passar no Holm (sinal, não prova); ➖ dentro do ruído; ⚠️ sem piora significativa, mas sem garantia. O ganho de ATE é atribuível ao ajuste global final (C1), não ao desacoplamento da thread densa; a redução da nuvem vem do filtro de voxel corrigido e é determinista.
