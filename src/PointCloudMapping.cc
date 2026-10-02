@@ -109,6 +109,7 @@ PointCloudMapping::Config PointCloudMapping::LoadConfig(const std::string &setti
     }
     readBool  (fs, "Dense.octomapWriteBt",     cfg.octomapWriteBt);
     readBool  (fs, "Dense.compressionReport",  cfg.compressionReport);
+    readBool  (fs, "Dense.voxelSafe",          cfg.voxelSafe);
 
     {
         const cv::FileNode n = fs["Dense.solidColor"];
@@ -177,8 +178,12 @@ void PointCloudMapping::PrintTimingSummary() {}
 #include <chrono>
 #include <cmath>
 #include <condition_variable>
+#include <cstdint>
+#include <cstring>
 #include <iomanip>
+#include <limits>
 #include <list>
+#include <memory>
 #include <mutex>
 #include <numeric>
 #include <set>
@@ -237,9 +242,18 @@ static cv::Vec3b depthToRainbow(float z, float dmin, float dmax)
 // True only on the dense thread when it runs at SCHED_IDLE.
 static thread_local bool tlIdleSched = false;
 
+// PrioBoost attempts the kernel refused (see below), reported by PrintTimingSummary.
+static std::atomic<size_t> gnBoostRefused{0};
+
 /** A2 priority-inversion guard: while the SCHED_IDLE dense thread holds a mutex
  *  that another thread (tracking, viewer, Save) may wait on, run it at normal
- *  priority so it cannot be starved while holding the lock. */
+ *  priority so it cannot be starved while holding the lock.
+ *
+ *  Linux lets an unprivileged thread enter SCHED_IDLE but not leave it again
+ *  without CAP_SYS_NICE or RLIMIT_NICE >= 20, and docker drops CAP_SYS_NICE (and
+ *  --cap-add does not reach a non-root user). The boost then fails with EPERM and
+ *  the thread keeps SCHED_IDLE while it holds the lock, so say so once instead of
+ *  silently running without the guard. */
 struct PrioBoost
 {
     bool active = false;
@@ -248,7 +262,17 @@ struct PrioBoost
         if (!tlIdleSched) return;
         sched_param sp;
         sp.sched_priority = 0;
-        active = (pthread_setschedparam(pthread_self(), SCHED_OTHER, &sp) == 0);
+        const int rc = pthread_setschedparam(pthread_self(), SCHED_OTHER, &sp);
+        active = (rc == 0);
+        if (active) return;
+        ++gnBoostRefused;
+        static std::atomic<bool> warned{false};
+        if (!warned.exchange(true))
+            std::cerr << "[Dense] WARNING: cannot raise the SCHED_IDLE dense thread back to SCHED_OTHER ("
+                      << std::strerror(rc) << "); it keeps SCHED_IDLE while holding mMutexQueue/mMutexCloud,"
+                         " a priority inversion when the CPUs are saturated. Needs CAP_SYS_NICE or"
+                         " RLIMIT_NICE >= 20 (docker: --ulimit nice=20:20; --cap-add=SYS_NICE is not"
+                         " enough for a non-root user)." << std::endl;
     }
     ~PrioBoost()
     {
@@ -257,6 +281,16 @@ struct PrioBoost
         sp.sched_priority = 0;
         pthread_setschedparam(pthread_self(), SCHED_IDLE, &sp);
     }
+};
+
+/** Puts std::cout's flags and precision back on scope exit. The summaries below
+ *  print with std::fixed << std::setprecision(2); left set, it would round
+ *  whatever the caller prints next (the examples' "median tracking time" lines). */
+struct CoutFormat
+{
+    std::ios_base::fmtflags flags     = std::cout.flags();
+    std::streamsize         precision = std::cout.precision();
+    ~CoutFormat() { std::cout.flags(flags); std::cout.precision(precision); }
 };
 
 struct PointCloudMapping::Impl
@@ -309,6 +343,14 @@ struct PointCloudMapping::Impl
     std::atomic<size_t>      mnSkippedNoPose{0};   // dropped: no live ancestor
     std::atomic<size_t>      mnEmptyCloud{0};      // dropped: keyframe gave an empty cloud
     std::atomic<bool>        mbFinalDone{false};   // final-pose rebuild is up to date
+
+    // VoxelFilterGlobal diagnostics (written under mMutexCloud, read by PrintTimingSummary).
+    std::atomic<size_t>      mnVoxelCalls{0};      // non-empty clouds handed to the filter
+    std::atomic<size_t>      mnVoxelOverflow{0};   // pcl's single pass refuses: dx*dy*dz > INT32_MAX
+    std::atomic<size_t>      mnVoxelSlabbed{0};    // voxelSafe: filtered slab by slab
+    std::atomic<size_t>      mnVoxelUnslabbed{0};  // voxelSafe: could not be slabbed, left unfiltered
+    std::atomic<double>      mVoxelSeconds{0.0};   // time spent in VoxelFilterGlobal
+    bool                     mbVoxelWarned = false;
 
     PointCloudT::Ptr   mpPriorCloud;          // cloud loaded before the run, if any
     std::vector<float> mvPriorDepth;
@@ -468,14 +510,15 @@ PointCloudMapping::Impl::Impl(const Config &cfg, int sensor)
               << (mCfg.octomapEnabled ? std::to_string(mCfg.octomapResolution) + " m" : std::string("off"))
               << std::endl;
     if (mCfg.queueLimit > 0 || mCfg.lowPriority || mbOffline || mbReproject || mbOctoAtEnd ||
-        mCfg.outlierRemoval || mCfg.wlsFilter)
+        mCfg.outlierRemoval || mCfg.wlsFilter || mCfg.voxelSafe)
         std::cout << "        extensions         : queueLimit=" << mCfg.queueLimit
                   << " lowPriority=" << mCfg.lowPriority
                   << " mode=" << (mbOffline ? "offline" : "online")
                   << " reproject=" << mbReproject
                   << " octomapAtEnd=" << mbOctoAtEnd
                   << " outlierRemoval=" << mCfg.outlierRemoval
-                  << " wls=" << mCfg.wlsFilter << std::endl;
+                  << " wls=" << mCfg.wlsFilter
+                  << (mCfg.voxelSafe ? " voxelSafe=1" : "") << std::endl;
 
     if (mbOffline && mCfg.offlineSpillDir.empty())
     {
@@ -830,21 +873,220 @@ void PointCloudMapping::Impl::MergeAppend(const PointCloudT::Ptr &cloudWorld,
     mvGlobalDepth.insert(mvGlobalDepth.end(), depths.begin(), depths.end());
 }
 
+// --- global voxel filter (voxelSafe) ----------------------------------------
+
+// Cells per slab: half of INT32_MAX, the limit of pcl's int32 cell index. The margin
+// keeps a slab clear of pcl's refusal even though the float estimate of its size and
+// the cell count its indices use can differ by one per axis.
+static const std::int64_t kVoxelSlabCells = std::int64_t(1) << 30;
+// Beyond these the cloud is a diverged map, not something to bin: voxel coordinates
+// stay int32 (so the conversions below are defined) and the slab list stays small.
+static const float        kMaxVoxelCoord  = 1073741824.0f;   // 2^30
+static const std::int64_t kMaxVoxelSlabs  = std::int64_t(1) << 20;
+
+/** a*b*c > limit for a, b, c >= 1 and limit <= INT32_MAX, without the int64
+ *  overflow a plain product has for absurd extents. */
+static bool cellsExceed(std::int64_t a, std::int64_t b, std::int64_t c, std::int64_t limit)
+{
+    if (a > limit || b > limit || c > limit) return true;
+    return a * b > limit / c;
+}
+
+/** Bounding box of the finite points and the grid pcl::VoxelGrid sizes from it.
+ *  d[] is pcl's dx, dy, dz and `overflows` its refusal test dx*dy*dz > INT32_MAX
+ *  (voxel_grid.hpp, applyFilter), in the same float arithmetic. */
+struct VoxelExtent
+{
+    size_t          nFinite = 0;
+    Eigen::Vector3f lo = Eigen::Vector3f::Zero();
+    Eigen::Vector3f hi = Eigen::Vector3f::Zero();
+    std::int64_t    d[3] = {0, 0, 0};
+    bool            overflows = false;
+};
+
+static VoxelExtent voxelExtent(const PointCloudT &cloud, float inv)
+{
+    VoxelExtent e;
+    Eigen::Vector3f lo = Eigen::Vector3f::Constant(std::numeric_limits<float>::max());
+    Eigen::Vector3f hi = Eigen::Vector3f::Constant(std::numeric_limits<float>::lowest());
+    for (const auto &p : cloud.points)
+    {
+        if (!std::isfinite(p.x) || !std::isfinite(p.y) || !std::isfinite(p.z)) continue;
+        lo = lo.cwiseMin(p.getVector3fMap());
+        hi = hi.cwiseMax(p.getVector3fMap());
+        ++e.nFinite;
+    }
+    if (e.nFinite == 0) return e;
+    e.lo = lo;
+    e.hi = hi;
+    for (int a = 0; a < 3; ++a)   // the clamp only keeps the conversion defined
+        e.d[a] = static_cast<std::int64_t>(std::min((hi[a] - lo[a]) * inv, 1.0e18f)) + 1;
+    e.overflows = cellsExceed(e.d[0], e.d[1], e.d[2], std::numeric_limits<std::int32_t>::max());
+    return e;
+}
+
+/** The voxel filter pcl::VoxelGrid would apply if its grid had no int32 limit, for
+ *  a cloud that does exceed it (VoxelExtent::overflows).
+ *
+ *  pcl numbers its cells from absolute multiples of the leaf size,
+ *  floor(coordinate * inverse leaf), whatever the box is. Cutting the cloud at
+ *  whole-voxel boundaries along its longest axis therefore leaves every cell, with
+ *  all of its points, in exactly one slab, and each slab can go through
+ *  pcl::VoxelGrid itself: the centroids and the colour averaging are pcl's own.
+ *  The slab index is computed with pcl's own float expression, so a point on a cell
+ *  boundary lands in the same cell, and slab, as it does in a single pass. A slab
+ *  has at most `maxCells` cells (counting pcl's +1 per axis); the cloud is indexed
+ *  once (4 bytes per point) and each slab's indices are freed after use. Non-finite
+ *  points are dropped, as pcl does.
+ *
+ *  Returns false, `out` untouched, when the cloud cannot be cut that way: its
+ *  cross-section alone exceeds maxCells, its voxel coordinates leave the int32
+ *  range, or it would need an absurd number of slabs. */
+static bool voxelFilterSlabs(const PointCloudT::Ptr &in, float leaf, const VoxelExtent &ext,
+                             std::int64_t maxCells, PointCloudT &out, size_t *pnSlabs = nullptr)
+{
+    if (pnSlabs) *pnSlabs = 0;
+    if (in->size() > static_cast<size_t>(std::numeric_limits<pcl::index_t>::max())) return false;
+    if (ext.nFinite == 0) { PointCloudT().swap(out); return true; }
+
+    const float inv = 1.0f / leaf;   // pcl::VoxelGrid::setLeafSize divides the same way
+    std::int64_t lo[3], cells[3];    // box corner and cell count per axis, in voxels
+    for (int a = 0; a < 3; ++a)
+    {
+        const float vlo = std::floor(ext.lo[a] * inv), vhi = std::floor(ext.hi[a] * inv);
+        if (!(vlo >= -kMaxVoxelCoord && vhi <= kMaxVoxelCoord)) return false;
+        lo[a]    = static_cast<std::int64_t>(vlo);
+        cells[a] = static_cast<std::int64_t>(vhi) - lo[a] + 1;
+    }
+    const int ax = (cells[0] >= cells[1] && cells[0] >= cells[2]) ? 0 : (cells[1] >= cells[2] ? 1 : 2);
+    const std::int64_t cross = (cells[(ax + 1) % 3] + 1) * (cells[(ax + 2) % 3] + 1);
+    std::int64_t thick = maxCells / cross - 1;                 // voxel layers per slab
+    if (thick < 1) return false;
+    thick = std::min(thick, cells[ax]);
+    const std::int64_t nSlabs = (cells[ax] + thick - 1) / thick;
+    if (nSlabs > kMaxVoxelSlabs) return false;
+
+    auto finite = [](const PointT &p) {
+        return std::isfinite(p.x) && std::isfinite(p.y) && std::isfinite(p.z);
+    };
+    // The clamp is only there so a bug could never index outside the slab list.
+    auto slabOf = [&](const PointT &p) {
+        const std::int64_t v = static_cast<std::int64_t>(std::floor(p.data[ax] * inv)) - lo[ax];
+        return static_cast<size_t>(std::min(std::max(v / thick, std::int64_t(0)), nSlabs - 1));
+    };
+
+    std::vector<std::uint32_t> count(static_cast<size_t>(nSlabs), 0);
+    for (const auto &p : in->points)
+        if (finite(p)) ++count[slabOf(p)];
+
+    std::vector<pcl::Indices> member(static_cast<size_t>(nSlabs));
+    for (size_t s = 0; s < member.size(); ++s) member[s].reserve(count[s]);
+    for (size_t i = 0; i < in->size(); ++i)
+        if (finite(in->points[i])) member[slabOf(in->points[i])].push_back(static_cast<pcl::index_t>(i));
+
+    PointCloudT result;
+    result.reserve(ext.nFinite);
+    size_t used = 0;
+    for (size_t s = 0; s < member.size(); ++s)
+    {
+        if (member[s].empty()) continue;
+        pcl::IndicesPtr idx = std::make_shared<pcl::Indices>(std::move(member[s]));
+        pcl::VoxelGrid<PointT> voxel;
+        voxel.setLeafSize(leaf, leaf, leaf);
+        voxel.setInputCloud(in);
+        voxel.setIndices(idx);
+        PointCloudT part;
+        voxel.filter(part);
+        // A refused grid returns the WHOLE input, not just this slab: never append it.
+        if (voxel.getNrDivisions()[0] == 0) return false;
+        result += part;
+        ++used;
+    }
+    result.width    = static_cast<uint32_t>(result.size());
+    result.height   = 1;
+    result.is_dense = true;
+    out.swap(result);
+    if (pnSlabs) *pnSlabs = used;
+    return true;
+}
+
+enum class VoxelPath { SinglePass, Slabs, Unslabbed };
+
+/** voxelSafe entry point. A cloud pcl accepts takes the unchanged single-pass call,
+ *  so its result is the one the legacy path gives; one it refuses goes to the slabs.
+ *  Unslabbed leaves `out` meaningless: the caller keeps the input, as pcl would
+ *  have returned it. */
+static VoxelPath voxelFilterSafe(const PointCloudT::Ptr &in, float leaf, std::int64_t maxCells,
+                                 PointCloudT &out, size_t *pnSlabs = nullptr)
+{
+    if (pnSlabs) *pnSlabs = 0;
+    if (!(leaf > 0.0f) || !std::isfinite(1.0f / leaf)) return VoxelPath::Unslabbed;
+    const VoxelExtent ext = voxelExtent(*in, 1.0f / leaf);
+    if (ext.nFinite == 0) { PointCloudT().swap(out); return VoxelPath::SinglePass; }
+    if (!ext.overflows)
+    {
+        pcl::VoxelGrid<PointT> voxel;
+        voxel.setLeafSize(leaf, leaf, leaf);
+        voxel.setInputCloud(in);
+        voxel.filter(out);
+        if (voxel.getNrDivisions()[0] != 0) return VoxelPath::SinglePass;
+        // pcl refused although the estimate said it would not (float rounding right
+        // at the limit): `out` is only a copy of the input, drop it and slab.
+        PointCloudT().swap(out);
+    }
+    return voxelFilterSlabs(in, leaf, ext, maxCells, out, pnSlabs) ? VoxelPath::Slabs
+                                                                   : VoxelPath::Unslabbed;
+}
+
 void PointCloudMapping::Impl::VoxelFilterGlobal()
 {
     PrioBoost boost;
     std::unique_lock<std::mutex> lock(mMutexCloud);
     if (mpGlobalCloud->empty()) return;
 
+    const auto t0 = std::chrono::steady_clock::now();
+    ++mnVoxelCalls;
+
     PointCloudT::Ptr filtered(new PointCloudT());
-    pcl::VoxelGrid<PointT> voxel;
-    voxel.setLeafSize(mCfg.resolution, mCfg.resolution, mCfg.resolution);
-    voxel.setInputCloud(mpGlobalCloud);
-    voxel.filter(*filtered);
+    if (mCfg.voxelSafe)
+    {
+        switch (voxelFilterSafe(mpGlobalCloud, mCfg.resolution, kVoxelSlabCells, *filtered))
+        {
+        case VoxelPath::SinglePass:
+            break;
+        case VoxelPath::Slabs:
+            ++mnVoxelOverflow;
+            ++mnVoxelSlabbed;
+            break;
+        case VoxelPath::Unslabbed:
+            ++mnVoxelOverflow;
+            ++mnVoxelUnslabbed;
+            filtered = mpGlobalCloud;   // unfiltered, as pcl returns it
+            if (!mbVoxelWarned)
+            {
+                mbVoxelWarned = true;
+                std::cerr << "[Dense] voxelSafe: the global cloud is too large to filter in slabs; "
+                             "it stays unfiltered." << std::endl;
+            }
+            break;
+        }
+    }
+    else
+    {
+        pcl::VoxelGrid<PointT> voxel;
+        voxel.setLeafSize(mCfg.resolution, mCfg.resolution, mCfg.resolution);
+        voxel.setInputCloud(mpGlobalCloud);
+        voxel.filter(*filtered);
+        // pcl assigns its grid size only after its overflow test, so no divisions
+        // means it refused and `filtered` is just a copy of the input.
+        if (voxel.getNrDivisions()[0] == 0) ++mnVoxelOverflow;
+    }
     mpGlobalCloud = filtered;
     // Only reached when the probabilistic merge is off, in which case the depth
     // array is never read; reset it to d0 to keep the sizes consistent.
     mvGlobalDepth.assign(mpGlobalCloud->size(), mSigmoidD0);
+    mVoxelSeconds = mVoxelSeconds.load() +
+                    std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
 }
 
 // --- sec. 3.4 ---------------------------------------------------------------
@@ -1190,6 +1432,7 @@ void PointCloudMapping::Impl::FinalizeAll()
     }
 
     mFinalizeSeconds = std::chrono::duration<double>(clock::now() - t0).count();
+    CoutFormat keepFormat;   // the print below leaves cout in fixed/2
     std::cout << "[Dense] final-pose reconstruction of " << stored.size()
               << " keyframes took " << std::fixed << std::setprecision(2)
               << mFinalizeSeconds << " s" << std::endl;
@@ -1339,6 +1582,7 @@ void PointCloudMapping::Save()
         std::remove(tmpXyz.c_str());
 
         auto mb = [](std::streamoff b) { return static_cast<double>(b) / (1024.0 * 1024.0); };
+        CoutFormat keepFormat;
         std::cout << std::fixed << std::setprecision(2)
                   << "[Dense] compression report (sizes in MiB, ratio = cloud / octomap)" << std::endl
                   << "  binary XYZRGB .pcd " << mb(pcdBytes) << "  vs colour .ot   " << mb(otBytes)
@@ -1384,6 +1628,8 @@ void PointCloudMapping::PrintTimingSummary()
         return v.empty() ? 0.0 : std::accumulate(v.begin(), v.end(), 0.0) / v.size();
     };
 
+    CoutFormat keepFormat;   // the block below switches cout to fixed/2
+
     // Mirrors the Dense Reconstruction block of Table X.
     std::cout << std::endl
               << "Dense Reconstruction timing over " << mpImpl->mvtTotal.size()
@@ -1399,6 +1645,20 @@ void PointCloudMapping::PrintTimingSummary()
                   << mpImpl->mnDropped << std::endl;
     if (mpImpl->mFinalizeSeconds > 0.0)
         std::cout << "  Final-pose rebuild at Save (s): " << mpImpl->mFinalizeSeconds << std::endl;
+    // "would overflow": the single-pass pcl::VoxelGrid refuses the grid and returns the
+    // cloud unfiltered. With voxelSafe those calls are the ones handled by slabs. Always
+    // printed, so 0 calls (probabilistic merge never filters globally) differs from a
+    // binary that has no such counters.
+    std::cout << "  Global voxel filter (voxelSafe=" << mpImpl->mCfg.voxelSafe << "): "
+              << mpImpl->mnVoxelCalls << " calls, " << mpImpl->mnVoxelOverflow
+              << " would overflow pcl's int32 grid, " << mpImpl->mnVoxelSlabbed
+              << " handled by slabs";
+    if (mpImpl->mnVoxelUnslabbed > 0)
+        std::cout << ", " << mpImpl->mnVoxelUnslabbed << " left unfiltered";
+    std::cout << ", " << mpImpl->mVoxelSeconds << " s" << std::endl;
+    if (gnBoostRefused > 0)
+        std::cout << "  Priority boosts refused: " << gnBoostRefused
+                  << " (dense thread stayed SCHED_IDLE while holding mMutexQueue/mMutexCloud)" << std::endl;
 }
 
 } // namespace ORB_SLAM3

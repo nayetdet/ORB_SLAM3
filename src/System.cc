@@ -23,6 +23,7 @@
 #include "PointCloudMapping.h"
 #include "Optimizer.h"
 #include <thread>
+#include <chrono>
 #include <pangolin/pangolin.h>
 #include <iomanip>
 #include <openssl/md5.h>
@@ -114,6 +115,21 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     node = fsSettings["GlobalBA.final"];
     if(!node.empty() && node.isInt())
         mbFinalGlobalBA = (int)node != 0;
+
+    // Optional synchronised shutdown (default off): Shutdown() waits for LocalMapping,
+    // LoopClosing and a running GBA before anything is saved, in every configuration, so
+    // a loop correction still in flight when the sequence ends is part of the saved
+    // trajectory. Off keeps the upstream non-waiting shutdown. Read from fsSettings like
+    // GlobalBA.final, so it works for old and File.version 1.0 settings alike.
+    mbSyncShutdown = false;
+    node = fsSettings["System.syncShutdown"];
+    if(!node.empty())
+    {
+        if(node.isInt())
+            mbSyncShutdown = (int)node != 0;
+        else
+            cerr << "[System.syncShutdown] must be an integer (0 or 1), using default 0" << endl;
+    }
 
     // Optional depth-dependent information matrix for stereo/RGB-D edges (default off).
     // w = clamp((refDepth/z)^4, minWeight, maxWeight); refDepth<=0 -> the sensor's
@@ -625,13 +641,45 @@ void System::Shutdown()
     // Anything that needs FINAL keyframe poses (final global BA, dense rebuild with
     // final poses) must not overlap LocalMapping / LoopClosing / a running GBA, or it
     // would read poses mid-update. Default runs (both off) keep the original
-    // non-waiting shutdown.
+    // non-waiting shutdown. System.syncShutdown asks for the same wait in every
+    // configuration, so that all the arms of a comparison save a settled trajectory.
+    // The wait covers work in flight (a loop correction, a GBA). Keyframes still queued
+    // for LocalMapping / LoopClosing are not drained: each thread finishes the iteration
+    // it is in and stops.
     const bool bNeedFinalPoses = mbFinalGlobalBA ||
         (mpPointCloudMapping && mpPointCloudMapping->NeedsFinalPoses());
-    if(bNeedFinalPoses)
+    if(bNeedFinalPoses || mbSyncShutdown)
     {
+        // Monotonic clock: the wait is reported, so wall-clock steps must not move it.
+        const std::chrono::steady_clock::time_point tWait0 = std::chrono::steady_clock::now();
+        auto waited = [&]()
+        {
+            return std::chrono::duration<double>(std::chrono::steady_clock::now() - tWait0).count();
+        };
+        // Bounded only when System.syncShutdown is on, so that opting in can never hang a
+        // run: isRunningGBA() can stay true for good when a superseded GBA returns early
+        // without clearing it (LoopClosing::RunGlobalBundleAdjustment) and no new one is
+        // launched. Without the key the wait is unbounded, as it always was.
+        const double maxWaitS = 1800.0;
         while(!mpLocalMapper->isFinished() || !mpLoopCloser->isFinished() || mpLoopCloser->isRunningGBA())
+        {
+            if(mbSyncShutdown && waited() > maxWaitS)
+            {
+                // Ask like the loop condition does: isRunningGBA() takes mMutexGBA, which a
+                // GBA waiting for LocalMapping holds, so only once both have finished.
+                const bool bLMDone = mpLocalMapper->isFinished(), bLCDone = mpLoopCloser->isFinished();
+                cerr << "[System.syncShutdown] WARNING: gave up waiting after " << maxWaitS
+                     << " s (LocalMapping finished=" << bLMDone << ", LoopClosing finished=" << bLCDone;
+                if(bLMDone && bLCDone)
+                    cerr << ", GBA running=" << mpLoopCloser->isRunningGBA();
+                cerr << "); continuing, the poses saved from here on may still be changing." << endl;
+                break;
+            }
             usleep(5000);
+        }
+        char sWait[32];
+        snprintf(sWait, sizeof(sWait), "%.2f", waited());
+        cout << "Shutdown: waited " << sWait << " s for LocalMapping/LoopClosing/GBA" << endl;
     }
 
     // Drain the dense thread BEFORE the final GBA rewrites poses: it then sees a

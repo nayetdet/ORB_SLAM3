@@ -61,29 +61,29 @@ D='docker run --rm -u $(id -u):$(id -g) -e HOME=/home/vscode -v "$WORK":/workspa
 
 ```bash
 # 1. tum / baseline  (est. 1.46 h, cumulative 1.46 h)
-$D python3 evaluation/harness/run_benchmark.py --config tum_rgbd --sequences fr1_desk,fr1_room,fr2_desk,fr3_office,fr2_large_with_loop --runs 10 --tag tum_baseline --out /workspaces/ORB_SLAM3/results
+$D python3 evaluation/harness/run_benchmark.py --config tum_rgbd --sequences fr1_desk,fr1_room,fr2_desk,fr3_office,fr2_large_with_loop --runs 10 --prune-dense --tag tum_baseline --out /workspaces/ORB_SLAM3/results
 # 2. tum / dense-faithful  (est. 1.56 h, cumulative 3.02 h)
-$D python3 evaluation/harness/run_benchmark.py --config tum_rgbd_dense --sequences fr1_desk,fr1_room,fr2_desk,fr3_office,fr2_large_with_loop --runs 10 --tag tum_dense_faithful --out /workspaces/ORB_SLAM3/results
+$D python3 evaluation/harness/run_benchmark.py --config tum_rgbd_dense --sequences fr1_desk,fr1_room,fr2_desk,fr3_office,fr2_large_with_loop --runs 10 --prune-dense --tag tum_dense_faithful --out /workspaces/ORB_SLAM3/results
 # 3. tum / dense-imp  (est. 1.60 h, cumulative 4.62 h)
-$D python3 evaluation/harness/run_benchmark.py --config tum_rgbd_dense_imp --sequences fr1_desk,fr1_room,fr2_desk,fr3_office,fr2_large_with_loop --runs 10 --tag tum_dense_imp --out /workspaces/ORB_SLAM3/results
+$D python3 evaluation/harness/run_benchmark.py --config tum_rgbd_dense_imp --sequences fr1_desk,fr1_room,fr2_desk,fr3_office,fr2_large_with_loop --runs 10 --prune-dense --tag tum_dense_imp --out /workspaces/ORB_SLAM3/results
 # 4. tum / offline  (est. 1.71 h, cumulative 6.33 h)
-$D python3 evaluation/harness/run_benchmark.py --config tum_rgbd_dense_offline --sequences fr1_desk,fr1_room,fr2_desk,fr3_office,fr2_large_with_loop --runs 10 --tag tum_offline --out /workspaces/ORB_SLAM3/results
+$D python3 evaluation/harness/run_benchmark.py --config tum_rgbd_dense_offline --sequences fr1_desk,fr1_room,fr2_desk,fr3_office,fr2_large_with_loop --runs 10 --prune-dense --tag tum_offline --out /workspaces/ORB_SLAM3/results
 # 5. euroc / baseline  (est. 2.80 h, cumulative 9.13 h)
-$D python3 evaluation/harness/run_benchmark.py --config euroc_stereo --sequences MH01,MH02,MH04,MH05,V101,V102,V103 --runs 10 --tag euroc_baseline --out /workspaces/ORB_SLAM3/results
+$D python3 evaluation/harness/run_benchmark.py --config euroc_stereo --sequences MH01,MH02,MH04,MH05,V101,V102,V103 --runs 10 --prune-dense --tag euroc_baseline --out /workspaces/ORB_SLAM3/results
 # 6. euroc / dense-faithful  (est. 2.94 h, cumulative 12.07 h)
-$D python3 evaluation/harness/run_benchmark.py --config euroc_stereo_dense --sequences MH01,MH02,MH04,MH05,V101,V102,V103 --runs 10 --tag euroc_dense_faithful --out /workspaces/ORB_SLAM3/results
+$D python3 evaluation/harness/run_benchmark.py --config euroc_stereo_dense --sequences MH01,MH02,MH04,MH05,V101,V102,V103 --runs 10 --prune-dense --tag euroc_dense_faithful --out /workspaces/ORB_SLAM3/results
 # 7. euroc / dense-imp  (est. 2.99 h, cumulative 15.06 h)
-$D python3 evaluation/harness/run_benchmark.py --config euroc_stereo_dense_imp --sequences MH01,MH02,MH04,MH05,V101,V102,V103 --runs 10 --tag euroc_dense_imp --out /workspaces/ORB_SLAM3/results
+$D python3 evaluation/harness/run_benchmark.py --config euroc_stereo_dense_imp --sequences MH01,MH02,MH04,MH05,V101,V102,V103 --runs 10 --prune-dense --tag euroc_dense_imp --out /workspaces/ORB_SLAM3/results
 # 8. euroc / offline  (est. 3.95 h, cumulative 19.02 h)
-$D python3 evaluation/harness/run_benchmark.py --config euroc_stereo_dense_offline --sequences MH01,MH02,MH04,MH05,V101,V102,V103 --runs 10 --tag euroc_offline --out /workspaces/ORB_SLAM3/results
+$D python3 evaluation/harness/run_benchmark.py --config euroc_stereo_dense_offline --sequences MH01,MH02,MH04,MH05,V101,V102,V103 --runs 10 --prune-dense --tag euroc_offline --out /workspaces/ORB_SLAM3/results
 # 9. kitti / baseline  (est. 3.26 h, cumulative 22.28 h)
-$D python3 evaluation/harness/run_benchmark.py --config kitti_stereo --sequences 00,03,05,07,09 --runs 10 --tag kitti_baseline --out /workspaces/ORB_SLAM3/results
+$D python3 evaluation/harness/run_benchmark.py --config kitti_stereo --sequences 00,03,05,07,09 --runs 10 --prune-dense --tag kitti_baseline --out /workspaces/ORB_SLAM3/results
 # 10. kitti / dense-faithful  (est. 3.36 h, cumulative 25.64 h)
-$D python3 evaluation/harness/run_benchmark.py --config kitti_stereo_dense --sequences 00,03,05,07,09 --runs 10 --tag kitti_dense_faithful --out /workspaces/ORB_SLAM3/results
+$D python3 evaluation/harness/run_benchmark.py --config kitti_stereo_dense --sequences 00,03,05,07,09 --runs 10 --prune-dense --tag kitti_dense_faithful --out /workspaces/ORB_SLAM3/results
 # 11. kitti / dense-imp  (est. 3.40 h, cumulative 29.04 h)
-$D python3 evaluation/harness/run_benchmark.py --config kitti_stereo_dense_imp --sequences 00,03,05,07,09 --runs 10 --tag kitti_dense_imp --out /workspaces/ORB_SLAM3/results
+$D python3 evaluation/harness/run_benchmark.py --config kitti_stereo_dense_imp --sequences 00,03,05,07,09 --runs 10 --prune-dense --tag kitti_dense_imp --out /workspaces/ORB_SLAM3/results
 # 12. kitti / offline  (est. 4.20 h, cumulative 33.24 h)
-$D python3 evaluation/harness/run_benchmark.py --config kitti_stereo_dense_offline --sequences 00,03,05,07,09 --runs 10 --tag kitti_offline --out /workspaces/ORB_SLAM3/results
+$D python3 evaluation/harness/run_benchmark.py --config kitti_stereo_dense_offline --sequences 00,03,05,07,09 --runs 10 --prune-dense --tag kitti_offline --out /workspaces/ORB_SLAM3/results
 ```
 
 Per-run estimates (seconds, including 4 s scoring):
@@ -124,7 +124,7 @@ $D python3 evaluation/harness/run_benchmark.py --compare results/kitti_baseline 
 $D python3 evaluation/harness/validate_dense.py --pcd results/tum_offline/fr2_large_with_loop/run00/<prefix>_cloud.pcd --ot results/tum_offline/fr2_large_with_loop/run00/<prefix>_octomap.ot --trajectory results/tum_offline/fr2_large_with_loop/run00/CameraTrajectory.txt --traj-format orb_tum
 ```
 
-`run_benchmark` moves only the trajectory out of each run directory; the `.pcd`/`.ot`/`.log` stay in `results/<tag>/<seq>/runNN/`. Note the runner scores the trajectory only: dense cloud quality (point counts, coverage) needs `validate_dense.py` or a look at the `[Dense]` lines in `slam.log`. Offline Shutdown time (rebuild) is inside the wall-clock reported per run.
+`run_benchmark` moves only the trajectory out of each run directory; the `.log` stays in `results/<tag>/<seq>/runNN/`. With `--prune-dense` (used in every command above) the `.pcd`/`.ot`/`.bt` are deleted after each run except `run00`, which is what `validate_dense.py` reads; without it 510 dense runs can fill the disk. `results.json` is now also rewritten after every sequence, so a crash keeps the finished sequences. Note the runner scores the trajectory only: dense cloud quality (point counts, coverage) needs `validate_dense.py` or a look at the `[Dense]` lines in `slam.log`. Offline Shutdown time (rebuild) is inside the wall-clock reported per run.
 
 ## 3. Total
 

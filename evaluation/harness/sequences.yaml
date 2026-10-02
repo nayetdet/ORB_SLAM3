@@ -8,7 +8,7 @@ roots:
   # EuRoC: one folder per sequence, each containing mav0/
   euroc: ~/Datasets/EuRoC
   # KITTI odometry: expects sequences/ and poses/ underneath
-  kitti: ~/Datasets/KITTI/odometry
+  kitti: ~/Datasets/KITTI/odometry/dataset
   # TUM RGB-D: one rgbd_dataset_freiburgN_* folder per sequence
   tum: ~/Datasets/TUM
 
@@ -195,6 +195,138 @@ configs:
     gt_from_sequence: "groundtruth.txt"
     max_diff: 0.02
 
+  # ---------------------------------------------------------------------------
+  # Interleaved, CPU-limited pilot (run_interleaved.py, evaluation/run_pilot.sh).
+  # ORBextractor.nFeatures is 1000 like the thesis (the EuRoC.yaml of this repo has 1200) and
+  # System.syncShutdown is 1 in every arm, so the arms differ only in what the pilot varies:
+  #   euroc_p_base      plain ORB-SLAM3 stereo
+  #   euroc_p_base_b    A/A replicate: the same settings file under another name; its comparison
+  #                     with euroc_p_base is the empirical false-positive rate of the analysis
+  #   euroc_p_c1        baseline + GlobalBA.final (C1 alone: splits C1 from A1/A2 in euroc_p_imp)
+  #   euroc_p_faithful  thesis-faithful dense (unbounded queue, normal priority, pcl voxel filter)
+  #   euroc_p_imp       dense_imp: queueLimit 3, lowPriority, GlobalBA.final, overflow-safe voxel filter
+  # check_yaml_pairs.py proves from the settings files that they differ only there.
+  # preflight_expect / preflight_forbid: regexes the 25 s preflight requires in / forbids from
+  # the log (settings that did not take effect show up here, not after hours of runs).
+  # run_expect / run_forbid: the same for the log of a FINISHED run (run_interleaved.py records the
+  # result as log_check in results.json and flags a run that fails it): what only shows at shutdown,
+  # i.e. that System.syncShutdown ('Shutdown: waited') and GlobalBA.final ('Final global bundle
+  # adjustment done') took effect in the arms that set them and in no other arm. An old binary
+  # ignores both keys silently; these lines are the proof that the binary was the right one.
+  # kitti_s_nosync / kitti_s_sync: the shutdown-synchronisation check on KITTI 04-10 (the
+  # existing KITTI04-12.yaml is the no-sync arm).
+  # ---------------------------------------------------------------------------
+  euroc_p_base:
+    dataset: euroc
+    sensor: stereo
+    align: se3
+    binary: Examples/Stereo/stereo_euroc
+    settings: Examples/Stereo/EuRoC_T1000.yaml
+    timestamps_dir: Examples/Stereo/EuRoC_TimeStamps
+    est_format: orb_euroc
+    gt_format: gt_euroc
+    gt_dir: evaluation/Ground_truth/EuRoC_left_cam
+    gt_template: "{gt}"
+    max_diff: 0.02
+    preflight_expect: ['Features per image: 1000']
+    preflight_forbid: ['\[Dense\] reconstruction enabled']
+    run_expect: ['Shutdown: waited']
+    run_forbid: ['Final global bundle adjustment']
+
+  euroc_p_base_b:
+    dataset: euroc
+    sensor: stereo
+    align: se3
+    binary: Examples/Stereo/stereo_euroc
+    settings: Examples/Stereo/EuRoC_T1000.yaml
+    timestamps_dir: Examples/Stereo/EuRoC_TimeStamps
+    est_format: orb_euroc
+    gt_format: gt_euroc
+    gt_dir: evaluation/Ground_truth/EuRoC_left_cam
+    gt_template: "{gt}"
+    max_diff: 0.02
+    preflight_expect: ['Features per image: 1000']
+    preflight_forbid: ['\[Dense\] reconstruction enabled']
+    run_expect: ['Shutdown: waited']
+    run_forbid: ['Final global bundle adjustment']
+
+  euroc_p_c1:
+    dataset: euroc
+    sensor: stereo
+    align: se3
+    binary: Examples/Stereo/stereo_euroc
+    settings: Examples/Stereo/EuRoC_T1000_C1.yaml
+    timestamps_dir: Examples/Stereo/EuRoC_TimeStamps
+    est_format: orb_euroc
+    gt_format: gt_euroc
+    gt_dir: evaluation/Ground_truth/EuRoC_left_cam
+    gt_template: "{gt}"
+    max_diff: 0.02
+    preflight_expect: ['Features per image: 1000']
+    preflight_forbid: ['\[Dense\] reconstruction enabled']
+    run_expect: ['Shutdown: waited', 'Final global bundle adjustment done']
+
+  euroc_p_faithful:
+    dataset: euroc
+    sensor: stereo
+    align: se3
+    binary: Examples/Stereo/stereo_euroc
+    settings: Examples/Stereo/EuRoC_Dense_T1000.yaml
+    timestamps_dir: Examples/Stereo/EuRoC_TimeStamps
+    est_format: orb_euroc
+    gt_format: gt_euroc
+    gt_dir: evaluation/Ground_truth/EuRoC_left_cam
+    gt_template: "{gt}"
+    max_diff: 0.02
+    preflight_expect: ['Features per image: 1000', '\[Dense\] reconstruction enabled']
+    # the 'extensions' line is printed only when some opt-in switch is on: the thesis-faithful arm must have none
+    preflight_forbid: ['extensions\s*:']
+    run_expect: ['Shutdown: waited', 'Dense Reconstruction timing']
+    run_forbid: ['Final global bundle adjustment']
+
+  euroc_p_imp:
+    dataset: euroc
+    sensor: stereo
+    align: se3
+    binary: Examples/Stereo/stereo_euroc
+    settings: Examples/Stereo/EuRoC_Dense_Imp_T1000.yaml
+    timestamps_dir: Examples/Stereo/EuRoC_TimeStamps
+    est_format: orb_euroc
+    gt_format: gt_euroc
+    gt_dir: evaluation/Ground_truth/EuRoC_left_cam
+    gt_template: "{gt}"
+    max_diff: 0.02
+    preflight_expect: ['Features per image: 1000', '\[Dense\] reconstruction enabled', 'queueLimit=3 lowPriority=1', 'voxelSafe=1']
+    run_expect: ['Shutdown: waited', 'Final global bundle adjustment done', 'Dense Reconstruction timing']
+
+  kitti_s_nosync:
+    dataset: kitti
+    sensor: stereo
+    align: se3
+    binary: Examples/Stereo/stereo_kitti
+    est_format: orb_kitti
+    gt_format: gt_kitti
+    gt_template: "poses/{gt}"
+    max_diff: 0.5
+    kitti_relative: true
+    preflight_expect: ['Features per image: 2000']
+    preflight_forbid: ['\[Dense\] reconstruction enabled']
+    run_forbid: ['Shutdown: waited']
+
+  kitti_s_sync:
+    dataset: kitti
+    sensor: stereo
+    align: se3
+    binary: Examples/Stereo/stereo_kitti
+    est_format: orb_kitti
+    gt_format: gt_kitti
+    gt_template: "poses/{gt}"
+    max_diff: 0.5
+    kitti_relative: true
+    preflight_expect: ['Features per image: 2000']
+    preflight_forbid: ['\[Dense\] reconstruction enabled']
+    run_expect: ['Shutdown: waited']
+
 
 # ---------------------------------------------------------------------------
 # Sequences. `folder` is relative to the dataset root.
@@ -349,6 +481,31 @@ sequences:
     fr3_office: {folder: rgbd_dataset_freiburg3_long_office_household, assoc: fr3_office.txt, settings: Examples/RGB-D/TUM3_Dense_Offline.yaml}
     fr2_large_no_loop: {folder: rgbd_dataset_freiburg2_large_no_loop, assoc: fr2_large_no_loop.txt, settings: Examples/RGB-D/TUM2_Dense_Offline.yaml}
     fr2_large_with_loop: {folder: rgbd_dataset_freiburg2_large_with_loop, assoc: fr2_large_with_loop.txt, settings: Examples/RGB-D/TUM2_Dense_Offline.yaml}
+
+  # --- interleaved pilot (see the configs above) ---
+  euroc_p_base: *euroc_seqs
+  euroc_p_base_b: *euroc_seqs
+  euroc_p_c1: *euroc_seqs
+  euroc_p_faithful: *euroc_seqs
+  euroc_p_imp: *euroc_seqs
+
+  kitti_s_nosync:
+    "04": {folder: sequences/04, gt: "04.txt", settings: Examples/Stereo/KITTI04-12.yaml}
+    "05": {folder: sequences/05, gt: "05.txt", settings: Examples/Stereo/KITTI04-12.yaml}
+    "06": {folder: sequences/06, gt: "06.txt", settings: Examples/Stereo/KITTI04-12.yaml}
+    "07": {folder: sequences/07, gt: "07.txt", settings: Examples/Stereo/KITTI04-12.yaml}
+    "08": {folder: sequences/08, gt: "08.txt", settings: Examples/Stereo/KITTI04-12.yaml}
+    "09": {folder: sequences/09, gt: "09.txt", settings: Examples/Stereo/KITTI04-12.yaml}
+    "10": {folder: sequences/10, gt: "10.txt", settings: Examples/Stereo/KITTI04-12.yaml}
+
+  kitti_s_sync:
+    "04": {folder: sequences/04, gt: "04.txt", settings: Examples/Stereo/KITTI04-12_Sync.yaml}
+    "05": {folder: sequences/05, gt: "05.txt", settings: Examples/Stereo/KITTI04-12_Sync.yaml}
+    "06": {folder: sequences/06, gt: "06.txt", settings: Examples/Stereo/KITTI04-12_Sync.yaml}
+    "07": {folder: sequences/07, gt: "07.txt", settings: Examples/Stereo/KITTI04-12_Sync.yaml}
+    "08": {folder: sequences/08, gt: "08.txt", settings: Examples/Stereo/KITTI04-12_Sync.yaml}
+    "09": {folder: sequences/09, gt: "09.txt", settings: Examples/Stereo/KITTI04-12_Sync.yaml}
+    "10": {folder: sequences/10, gt: "10.txt", settings: Examples/Stereo/KITTI04-12_Sync.yaml}
 
 # ---------------------------------------------------------------------------
 # Baselines from the literature, for the comparison table. These are reference

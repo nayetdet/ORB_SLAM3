@@ -112,3 +112,10 @@ Viewer.ViewpointZ: -1.8
 Viewer.ViewpointF: 500.0
 Viewer.imageViewScale: 1.0
 
+
+#--------------------------------------------------------------------------------------------
+# System.UseViewer: 0 disables the Pangolin window. Required on a headless machine,
+# and it should be 0 for accuracy benchmarks anyway -- the viewer competes for CPU
+# with Local BA, which changes the ATE.
+#--------------------------------------------------------------------------------------------
+System.UseViewer: 0

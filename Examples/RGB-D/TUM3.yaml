@@ -105,3 +105,10 @@ Dense.octomapResolution: 0.01
 # Output: <saveDirectory>/<savePrefix>_cloud.pcd and _octomap.ot
 Dense.saveDirectory: "."
 Dense.savePrefix: "tum_fr3"
+
+#--------------------------------------------------------------------------------------------
+# System.UseViewer: 0 disables the Pangolin window. Required on a headless machine,
+# and it should be 0 for accuracy benchmarks anyway -- the viewer competes for CPU
+# with Local BA, which changes the ATE.
+#--------------------------------------------------------------------------------------------
+System.UseViewer: 0

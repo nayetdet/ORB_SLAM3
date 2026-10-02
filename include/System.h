@@ -270,6 +270,15 @@ private:
     // Run one global BA at Shutdown, before the trajectories are saved (GlobalBA.final)
     bool mbFinalGlobalBA;
 
+    // Make Shutdown wait for LocalMapping, LoopClosing and a running GBA before anything
+    // is saved, whatever Dense or GlobalBA.final say (System.syncShutdown, default 0 =
+    // the original non-waiting shutdown). It is the wait that GlobalBA.final and the
+    // final-pose dense modes already force, but bounded to 1800 s (then a warning and the
+    // shutdown goes on). It waits for work in flight only: keyframes still queued for
+    // LocalMapping / LoopClosing are not drained. Logged as
+    // "Shutdown: waited X.XX s for LocalMapping/LoopClosing/GBA".
+    bool mbSyncShutdown;
+
     Settings* settings_;
 };
 

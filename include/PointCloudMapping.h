@@ -130,6 +130,17 @@ public:
         bool  octomapWriteBt     = false;
         bool  compressionReport  = false;
 
+        // voxelSafe: the global voxel filter (plain-append path) runs pcl::VoxelGrid
+        // on the whole world cloud. PCL indexes its grid with int32 and, when the
+        // bounding box holds more than INT32_MAX leaf cells (KITTI at 0.1 m, TUM
+        // fr2_large_with_loop at 0.01 m), prints "Integer indices would overflow" and
+        // returns the cloud UNFILTERED. With voxelSafe such a cloud is filtered in
+        // slabs along its longest axis instead, which gives the cells and centroids
+        // one unlimited single pass would. Clouds PCL accepts take the exact same
+        // call as before. 0 keeps the overflow, i.e. the run the thesis-faithful
+        // arm was measured with.
+        bool  voxelSafe          = false;
+
         // --- output ---
         std::string saveDirectory = ".";
         std::string savePrefix    = "dense";
