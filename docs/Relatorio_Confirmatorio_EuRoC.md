@@ -224,3 +224,193 @@ Leitura honesta:
 2. Tabela X, linhas do ORB-SLAM3 puro: build `REGISTER_TIMES` e V2_02.
 3. FPS real: execução sem pacing e tempo de rastreamento com precisão total no braço denso.
 4. Tabelas VIII/IX: nada de execução é necessário; para fechar a comparação exata faltam FR2_no_loop, KITTI 01/02, o `Dense.resolution` de EuRoC/KITTI da tese e, opcionalmente, 5 execuções reais com `Dense.resolution` = leaf para substituir a série derivada da Tabela VIII (cerca de 5 execuções curtas de fr1_room, abaixo de 5 min cada).
+
+## 11. TUM RGB-D (Tabela IV) com o protocolo novo
+
+12 execuções por braço e sequência, entrelaçadas, 2 núcleos; ATE RMSE SE(3) em m (mediana); variação contra o baseline (p bruto / Holm sobre 15 comparações). Pré-registro: `evaluation/PRE_REGISTRATION_tum_kitti.md`.
+
+| Seq | Baseline | c1 | faithful | imp | Tese (Proposed) |
+|---|---|---|---|---|---|
+| fr1_desk | 0.0175 | 0.0174 (-1.0%, 0.863 / 1.00) | 0.0173 (-1.4%, 0.397 / 1.00) | 0.0177 (+0.6%, 0.801 / 1.00) | 0.017 |
+| fr1_room | 0.0734 | 0.0663 (-9.6%, 0.118 / 1.00) | 0.0728 (-0.8%, 0.802 / 1.00) | 0.0709 (-3.3%, 0.458 / 1.00) | 0.052 |
+| fr2_desk | 0.0184 | 0.0185 (+0.5%, 0.933 / 1.00) | 0.0188 (+2.2%, 0.521 / 1.00) | 0.0185 (+0.6%, 0.652 / 1.00) | 0.018 |
+| fr2_large_no_loop | 0.5216 | 0.5745 (+10.1%, 0.328 / 1.00) | 0.5425 (+4.0%, 0.612 / 1.00) | 0.5152 (-1.2%, 0.872 / 1.00) | 0.237 |
+| fr3_office | 0.0108 | 0.0100 (-8.1%, 0.110 / 1.00) | 0.0101 (-6.7%, 0.140 / 1.00) | 0.0097 (-10.6%, 0.014 / 0.21) | — |
+
+Significativos após Holm: 0. Com p bruto<0,05: c1 0, faithful 0, imp 1 (de 5 cada).
+
+
+## 12. KITTI (Tabela VI) com o protocolo novo
+
+4 execuções por braço e sequência (a tese usou a média de 3), 2 núcleos, entrelaçadas. Com 4 contra 4 nenhuma comparação individual passa no Holm (declarado no pré-registro); o critério confirmatório é o teste de sinal exato sobre as 11 sequências, por braço, com Holm sobre os 3 braços.
+
+| Seq | Baseline ATE (m) | c1 | faithful | imp | Tese ATE | Baseline t_rel (%) | imp t_rel |
+|---|---|---|---|---|---|---|---|
+| 00 | 1.204 | 1.152 (-4.3%) | 1.204 (+0.0%) | 1.150 (-4.5%) | 1.248 | 0.690 | 0.664 (-3.8%) |
+| 01 | 14.613 | 17.600 (+20.4%) | 14.222 (-2.7%) | 13.672 (-6.4%) | 5.596 | 1.717 | 1.797 (+4.6%) |
+| 02 | 5.158 | 4.990 (-3.3%) | 5.392 (+4.5%) | 4.942 (-4.2%) | 1.924 | 0.750 | 0.727 (-3.1%) |
+| 03 | 1.352 | 1.346 (-0.4%) | 1.328 (-1.8%) | 1.395 (+3.2%) | 0.637 | 0.949 | 0.958 (+1.0%) |
+| 04 | 0.232 | 0.245 (+5.8%) | 0.234 (+0.8%) | 0.251 (+8.3%) | 0.233 | 0.461 | 0.487 (+5.6%) |
+| 05 | 0.931 | 0.942 (+1.1%) | 0.937 (+0.7%) | 0.945 (+1.5%) | 0.561 | 0.444 | 0.452 (+1.9%) |
+| 06 | 0.968 | 0.870 (-10.1%) | 0.970 (+0.3%) | 0.939 (-3.0%) | 1.352 | 0.589 | 0.568 (-3.5%) |
+| 07 | 0.460 | 0.470 (+2.1%) | 0.463 (+0.7%) | 0.454 (-1.3%) | 0.459 | 0.451 | 0.458 (+1.6%) |
+| 08 | 3.578 | 3.215 (-10.1%) | 3.583 (+0.2%) | 3.580 (+0.1%) | 2.654 | 1.027 | 1.030 (+0.3%) |
+| 09 | 1.846 | 1.918 (+3.9%) | 1.876 (+1.6%) | 1.907 (+3.3%) | 3.861 | 0.919 | 0.943 (+2.6%) |
+| 10 | 1.231 | 1.265 (+2.7%) | 1.284 (+4.3%) | 1.270 (+3.2%) | 1.245 | 0.640 | 0.673 (+5.2%) |
+
+Teste de sinal exato bilateral (melhor = menor erro), por braço contra o baseline:
+
+| Braço | Métrica | melhores / piores | p bilateral | p Holm (3 braços) |
+|---|---|---|---|---|
+| c1 | ATE | 5 / 6 | 1.000 | 1.000 |
+| faithful | ATE | 2 / 9 | 0.065 | 0.196 |
+| imp | ATE | 5 / 6 | 1.000 | 1.000 |
+| c1 | t_rel | 4 / 7 | 0.549 | 1.000 |
+| faithful | t_rel | 4 / 7 | 0.549 | 1.000 |
+| imp | t_rel | 3 / 8 | 0.227 | 0.680 |
+
+A tese compara apenas ATE; as diferenças em relação a ela têm as mesmas ressalvas de hardware e alinhamento.
+
+
+## 13. FPS sem pausas (métrica "FPS" da tese)
+Medição própria (`ORB_NO_PACING=1`): quadros / tempo de parede do laço de quadros, 2 núcleos, mediana (12 execuções; 4 no KITTI). A tese não define o relógio; esta é a leitura mais próxima do texto. Valores da tese (outro notebook): TUM 17,7 a 24,2 Hz, EuRoC ~15 Hz, KITTI até 10 Hz.
+
+fps = N frames / wall-clock time of the frame loop, image loading included, Shutdown excluded, `ORB_NO_PACING=1`. Median over ok runs; range in brackets; ratio = median fps / baseline median fps.
+
+### fr1_desk
+
+| arm | ok/N | fps median [min, max] | ms/frame | ratio vs tum_f_base | wall s | ATE m | frames |
+|---|---|---|---|---|---|---|---|
+| tum_f_base | 12/12 | 43.05 [42.33, 44.75] | 23.23 | 1.000 | 18 | 0.0174 | 573 |
+| tum_f_c1 | 12/12 | 43.48 [42.34, 44.44] | 23.00 | 1.010 | 18 | 0.0179 | 573 |
+| tum_f_faithful | 12/12 | 42.73 [41.54, 43.62] | 23.40 | 0.993 | 18 | 0.0205 | 573 |
+| tum_f_imp | 12/12 | 43.23 [41.41, 43.88] | 23.13 | 1.004 | 19 | 0.0203 | 573 |
+
+fps = N frames / wall-clock time of the frame loop, image loading included, Shutdown excluded, `ORB_NO_PACING=1`. Median over ok runs; range in brackets; ratio = median fps / baseline median fps.
+
+### MH01
+
+| arm | ok/N | fps median [min, max] | ms/frame | ratio vs euroc_f_base | wall s | ATE m | frames |
+|---|---|---|---|---|---|---|---|
+| euroc_f_base | 12/12 | 39.38 [39.22, 39.58] | 25.39 | 1.000 | 98 | 0.0345 | 3682 |
+| euroc_f_c1 | 12/12 | 39.33 [39.15, 39.61] | 25.43 | 0.999 | 100 | 0.0278 | 3682 |
+| euroc_f_faithful | 11/12 | 36.16 [35.80, 36.58] | 27.65 | 0.918 | 108 | 0.0438 | 3682 |
+| euroc_f_imp | 12/12 | 36.80 [36.43, 37.00] | 27.17 | 0.934 | 108 | 0.0305 | 3682 |
+
+fps = N frames / wall-clock time of the frame loop, image loading included, Shutdown excluded, `ORB_NO_PACING=1`. Median over ok runs; range in brackets; ratio = median fps / baseline median fps.
+
+### 07
+
+| arm | ok/N | fps median [min, max] | ms/frame | ratio vs kitti_f_base | wall s | ATE m | frames |
+|---|---|---|---|---|---|---|---|
+| kitti_f_base | 4/4 | 29.00 [28.86, 29.10] | 34.48 | 1.000 | 43 | 0.4607 | 1101 |
+| kitti_f_c1 | 4/4 | 29.05 [28.87, 29.17] | 34.43 | 1.002 | 43 | 0.4536 | 1101 |
+| kitti_f_faithful | 4/4 | 24.02 [23.89, 24.20] | 41.63 | 0.828 | 96 | 0.4556 | 1101 |
+| kitti_f_imp | 4/4 | 25.02 [24.99, 25.05] | 39.97 | 0.863 | 50 | 0.4674 | 1101 |
+
+
+## 14. Mapas encadeados (Tabela VII)
+Cada cadeia roda em um único processo, e o ORB-SLAM3 funde os mapas sozinho; uma cadeia que não funde (Atlas com mais de 1 mapa) é inválida e descartada. A métrica é o ATE da última sequência, como na Tabela VII (leitura inferida do texto da tese). **Parcial:** o EuRoC foi interrompido em 144 das 288 execuções planejadas (3 de 6 rodadas) por limite de tempo, porque o braço fiel com fusão probabilística leva até 90 min por cadeia e a cadeia MH01-05 estourou o limite de 90 min; isso é um desvio do desenho e um achado em si (custo da fusão probabilística).
+
+### multi_euroc
+One process per chain run; ORB-SLAM3 merges the maps itself. ok = valid (one map in the atlas, every sequence >= 50% in the saved trajectory); INVALID runs are excluded from every median and listed below. ATE = RMSE after SE(3) alignment, m.
+
+#### euroc_m_base
+
+| chain | ok/N | last-seq ATE | delta vs control (p) | last-seq mean err | chain ATE (1 alignment) | last in chain align. | maps | merges | thesis VII (V) |
+|---|---|---|---|---|---|---|---|---|---|
+| MH01-02 | 3/3 | 0.0285 | -1.1% (p=1.000) | 0.0269 | 0.0272 | 0.0287 | 1 | 1.0 | 0.026 (0.028) |
+| MH01-03 | 3/3 | 0.0287 | -24.5% (p=0.200) | 0.0255 | 0.0334 | 0.0320 | 1 | 2.0 | 0.027 (0.032) |
+| MH01-04 | 3/3 | 0.0547 | -25.1% (p=0.600) | 0.0455 | 0.0562 | 0.0652 | 1 | 3.0 | 0.091 (0.112) |
+| MH01-05 | 3/3 | 0.0660 | +49.9% (p=0.400) | 0.0621 | 0.0550 | 0.0709 | 1 | 4.0 | 0.044 (0.061) |
+| V101-102 | 3/3 | 0.0272 | -7.7% (p=0.400) | 0.0219 | 0.0351 | 0.0315 | 1 | 1.0 | 0.028 (0.036) |
+| V101-103 | 2/3 | 0.1239 | +10.9% (p=0.800) | 0.0953 | 0.0842 | 0.1330 | 1,2 | 2.0 | 0.030 (0.107) |
+| MH02 | 3/3 | 0.0288 | — | 0.0265 | 0.0288 | 0.0288 | 1 | 0.0 | (0.028) |
+| MH03 | 3/3 | 0.0380 | — | 0.0326 | 0.0380 | 0.0380 | 1 | 0.0 | (0.032) |
+| MH04 | 3/3 | 0.0730 | — | 0.0683 | 0.0730 | 0.0730 | 1 | 0.0 | (0.112) |
+| MH05 | 3/3 | 0.0440 | — | 0.0364 | 0.0440 | 0.0440 | 1 | 0.0 | (0.061) |
+| V102 | 3/3 | 0.0295 | — | 0.0249 | 0.0295 | 0.0295 | 1 | 0.0 | (0.036) |
+| V103 | 3/3 | 0.1117 | — | 0.0817 | 0.1117 | 0.1117 | 1 | 0.0 | (0.107) |
+
+#### euroc_m_c1
+
+| chain | ok/N | last-seq ATE | delta vs control (p) | last-seq mean err | chain ATE (1 alignment) | last in chain align. | maps | merges | thesis VII (V) |
+|---|---|---|---|---|---|---|---|---|---|
+| MH01-02 | 3/3 | 0.0283 | +84.8% (p=0.200) | 0.0271 | 0.0279 | 0.0285 | 1 | 1.0 | 0.026 (0.028) |
+| MH01-03 | 3/3 | 0.0327 | -2.9% (p=0.600) | 0.0285 | 0.0294 | 0.0349 | 1 | 2.0 | 0.027 (0.032) |
+| MH01-04 | 3/3 | 0.0433 | -39.6% (p=0.400) | 0.0361 | 0.0293 | 0.0448 | 1 | 3.0 | 0.091 (0.112) |
+| MH01-05 | 3/3 | 0.0424 | -28.2% (p=0.200) | 0.0357 | 0.0334 | 0.0443 | 1 | 4.0 | 0.044 (0.061) |
+| V101-102 | 3/3 | 0.0248 | -25.0% (p=0.200) | 0.0203 | 0.0344 | 0.0297 | 1 | 1.0 | 0.028 (0.036) |
+| V101-103 | 1/3 | 0.1025 | -7.5% (p=n/a) | 0.0618 | 0.0690 | 0.1083 | 1,2 | 1.0 | 0.030 (0.107) |
+| MH02 | 3/3 | 0.0153 | — | 0.0142 | 0.0153 | 0.0153 | 1 | 0.0 | (0.028) |
+| MH03 | 3/3 | 0.0337 | — | 0.0267 | 0.0337 | 0.0337 | 1 | 0.0 | (0.032) |
+| MH04 | 3/3 | 0.0717 | — | 0.0687 | 0.0717 | 0.0717 | 1 | 0.0 | (0.112) |
+| MH05 | 3/3 | 0.0591 | — | 0.0511 | 0.0591 | 0.0591 | 1 | 0.0 | (0.061) |
+| V102 | 3/3 | 0.0331 | — | 0.0243 | 0.0331 | 0.0331 | 1 | 0.0 | (0.036) |
+| V103 | 2/2 | 0.1109 | — | 0.0962 | 0.1109 | 0.1109 | 1 | 0.0 | (0.107) |
+
+#### euroc_m_faithful
+
+| chain | ok/N | last-seq ATE | delta vs control (p) | last-seq mean err | chain ATE (1 alignment) | last in chain align. | maps | merges | thesis VII (V) |
+|---|---|---|---|---|---|---|---|---|---|
+| MH01-02 | 3/3 | 0.0362 | +31.1% (p=0.200) | 0.0321 | 0.0338 | 0.0364 | 1 | 1.0 | 0.026 (0.028) |
+| MH01-03 | 3/3 | 0.0319 | -2.1% (p=1.000) | 0.0276 | 0.0364 | 0.0372 | 1 | 2.0 | 0.027 (0.032) |
+| MH01-04 | 3/3 | 0.0639 | -20.2% (p=0.200) | 0.0584 | 0.0438 | 0.0714 | 1 | 3.0 | 0.091 (0.112) |
+| MH01-05 | 0/3 | — | — | — | — | — | — | 4.0 | 0.044 |
+| V101-102 | 3/3 | 0.0252 | -25.5% (p=0.400) | 0.0205 | 0.0343 | 0.0291 | 1 | 1.0 | 0.028 (0.036) |
+| V101-103 | 3/3 | 0.1421 | +19.4% (p=0.400) | 0.1002 | 0.0944 | 0.1537 | 1 | 2.0 | 0.030 (0.107) |
+| MH02 | 3/3 | 0.0276 | — | 0.0239 | 0.0276 | 0.0276 | 1 | 0.0 | (0.028) |
+| MH03 | 3/3 | 0.0325 | — | 0.0272 | 0.0325 | 0.0325 | 1 | 0.0 | (0.032) |
+| MH04 | 3/3 | 0.0800 | — | 0.0730 | 0.0800 | 0.0800 | 1 | 0.0 | (0.112) |
+| MH05 | 3/3 | 0.0538 | — | 0.0464 | 0.0538 | 0.0538 | 1 | 0.0 | (0.061) |
+| V102 | 3/3 | 0.0338 | — | 0.0263 | 0.0338 | 0.0338 | 1 | 0.0 | (0.036) |
+| V103 | 3/3 | 0.1190 | — | 0.0970 | 0.1190 | 0.1190 | 1 | 0.0 | (0.107) |
+
+#### euroc_m_imp
+
+| chain | ok/N | last-seq ATE | delta vs control (p) | last-seq mean err | chain ATE (1 alignment) | last in chain align. | maps | merges | thesis VII (V) |
+|---|---|---|---|---|---|---|---|---|---|
+| MH01-02 | 3/3 | 0.0324 | +117.4% (p=0.200) | 0.0302 | 0.0312 | 0.0326 | 1 | 1.0 | 0.026 (0.028) |
+| MH01-03 | 3/3 | 0.0284 | -31.6% (p=0.200) | 0.0245 | 0.0250 | 0.0296 | 1 | 2.0 | 0.027 (0.032) |
+| MH01-04 | 3/3 | 0.0519 | -4.0% (p=1.000) | 0.0407 | 0.0338 | 0.0544 | 1 | 3.0 | 0.091 (0.112) |
+| MH01-05 | 3/3 | 0.0425 | -26.0% (p=0.200) | 0.0356 | 0.0362 | 0.0450 | 1 | 4.0 | 0.044 (0.061) |
+| V101-102 | 3/3 | 0.0234 | -20.2% (p=0.200) | 0.0197 | 0.0344 | 0.0288 | 1 | 1.0 | 0.028 (0.036) |
+| V101-103 | 3/3 | 0.0851 | -7.1% (p=1.000) | 0.0681 | 0.0646 | 0.0954 | 1 | 2.0 | 0.030 (0.107) |
+| MH02 | 3/3 | 0.0149 | — | 0.0133 | 0.0149 | 0.0149 | 1 | 0.0 | (0.028) |
+| MH03 | 3/3 | 0.0415 | — | 0.0354 | 0.0415 | 0.0415 | 1 | 0.0 | (0.032) |
+| MH04 | 3/3 | 0.0541 | — | 0.0452 | 0.0541 | 0.0541 | 1 | 0.0 | (0.112) |
+| MH05 | 3/3 | 0.0575 | — | 0.0456 | 0.0575 | 0.0575 | 1 | 0.0 | (0.061) |
+| V102 | 3/3 | 0.0294 | — | 0.0226 | 0.0294 | 0.0294 | 1 | 0.0 | (0.036) |
+| V103 | 3/3 | 0.0915 | — | 0.0754 | 0.0915 | 0.0915 | 1 | 0.0 | (0.107) |
+
+#### INVALID chain runs (excluded)
+
+| arm | chain | run | reason |
+|---|---|---|---|
+| euroc_m_base | V101-103 | run01 | sequence V101: 0 matched poses (< 3); sequence V101: 0% of its frames are in the saved trajectory (< 50%); sequence V102: 0 matched poses (< 3); sequence V102: 0% of its frames are in the saved trajectory (< 50%); maps_in_atlas=2: the sequences did not all merge into one map |
+| euroc_m_c1 | V101-103 | run01 | sequence V101: 0 matched poses (< 3); sequence V101: 0% of its frames are in the saved trajectory (< 50%); sequence V102: 0 matched poses (< 3); sequence V102: 0% of its frames are in the saved trajectory (< 50%); maps_in_atlas=2: the sequences did not all merge into one map |
+| euroc_m_c1 | V101-103 | run02 | sequence V101: 0 matched poses (< 3); sequence V101: 0% of its frames are in the saved trajectory (< 50%); sequence V102: 0 matched poses (< 3); sequence V102: 0% of its frames are in the saved trajectory (< 50%); maps_in_atlas=2: the sequences did not all merge into one map |
+
+Controls are the single sequences (a chain of one) of the same arm and session; delta = (chain - control) / control on medians; p = exact two-sided permutation test on the median difference, UNADJUSTED (several chains x arms are tested: multiply by the number of chains for a Bonferroni bound). Thesis columns: Table VII, and in brackets Table V (single sequence) for the same last sequence. TUM: the thesis gives the AVERAGE ATE PER FRAME of fr2_large_no_loop, 0.706 m single -> 0.181 m after fr2_large_with_loop: compare it with the 'last-seq mean err' column.
+
+### multi_tum
+Em andamento no momento desta consolidação; os dados ficam em `results_extra/multi_tum`.
+
+## 15. Conclusões consolidadas frente às premissas
+
+| Métrica da tese | Resultado (denso melhorado vs baseline) | Estado |
+|---|---|---|
+| Tabela V, ATE EuRoC | −37% no MH02 (significativo após Holm); −24% a −31% em MH01, MH04 e V102 (só p bruto); sem piora significativa em nenhuma das 8 sequências | **Melhorou** (ganho atribuível ao ajuste final C1) |
+| Tabela IV, ATE TUM | −10,6% no fr3_office (p bruto 0,014, não passa no Holm); neutro nas demais | Igual, com um sinal |
+| Tabela VI, ATE e t_rel KITTI | ±5% por sequência; teste de sinal: ATE 5 melhores / 6 piores (p=1,0), t_rel 3 / 8 (p=0,23); o denso fiel tende a piorar o ATE (2 / 9, p=0,065, Holm 0,20) | **Igual** (sem ganho, sem piora significativa) |
+| Tabelas VIII/IX, tamanho das nuvens | −33% a −53% nas cenas grandes (MH03, MH04, MH05), determinista; razão de compressão só comparável em formatos iguais (seção 10) | **Melhorou por construção** |
+| Tabela X, tempo por keyframe | total menor que o da tese em todos os casos, mas a aquisição de profundidade estéreo é muito mais lenta (SGBM contra 1,5 ms); faltam as linhas do ORB-SLAM3 | Misto e parcial |
+| FPS | o denso reduz o FPS em ~7% a 8% contra o baseline (EuRoC MH01), e o melhorado perde um pouco menos que o fiel | **Não melhorou** contra o baseline; custo inerente da thread densa |
+| Tabela VII, mapas encadeados | EuRoC parcial (144 de 288 execuções) e TUM em andamento; o braço fiel com fusão probabilística é muito mais lento | Parcial |
+
+**Sobre as três premissas.**
+1. *Comparável com a tese:* mesmas sequências e protocolo declarado para cada tabela; o alinhamento e o relógio da tese não são declarados, então comparações numéricas diretas são indicativas.
+2. *Alterações novas:* o ajuste final (C1), o filtro de voxel corrigido e o shutdown sincronizado entram em todos os experimentos; o ganho de ATE vem do C1, e o ganho de tamanho do filtro de voxel.
+3. *Nada pior, melhorar ao menos uma métrica:* há melhora no ATE do EuRoC e no tamanho das nuvens, e **nenhuma piora significativa** em ATE em EuRoC, TUM ou KITTI. Isso **não** significa melhorar todas as métricas: o FPS fica abaixo do baseline (custo inerente da reconstrução densa), a aquisição de profundidade estéreo é mais lenta que a da tese, e no KITTI não há ganho. A afirmação defensável é "melhora precisão e tamanho do mapa onde há margem, sem piora significativa de precisão em nenhum dataset".
+
+**Limites.** Tabela VII incompleta; 4 execuções por KITTI (sem poder para o Holm por sequência); alinhamento da tese desconhecido; execuções do TUM do protocolo antigo não entram aqui; tudo medido em um Ryzen 5 4600G limitado a 2 núcleos, não no notebook da tese.
