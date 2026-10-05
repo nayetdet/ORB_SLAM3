@@ -173,3 +173,6 @@ System.syncShutdown: 1
 # in ONE process (ChangeDataset), so the dense thread keeps its global cloud across them and Dense.loadCloud
 # is not needed. Everything else is identical to the single-sequence file this was generated from.
 #--------------------------------------------------------------------------------------------
+
+# Pilot defect fix (preflight caught it): the improved arm must use the corrected global voxel filter.
+Dense.voxelSafe: 1
