@@ -393,8 +393,18 @@ One process per chain run; ORB-SLAM3 merges the maps itself. ok = valid (one map
 
 Controls are the single sequences (a chain of one) of the same arm and session; delta = (chain - control) / control on medians; p = exact two-sided permutation test on the median difference, UNADJUSTED (several chains x arms are tested: multiply by the number of chains for a Bonferroni bound). Thesis columns: Table VII, and in brackets Table V (single sequence) for the same last sequence. TUM: the thesis gives the AVERAGE ATE PER FRAME of fr2_large_no_loop, 0.706 m single -> 0.181 m after fr2_large_with_loop: compare it with the 'last-seq mean err' column.
 
-### multi_tum
-Em andamento no momento desta consolidação; os dados ficam em `results_extra/multi_tum`.
+### multi_tum (concluído: 64 de 64 execuções, 8 por braço e cadeia, 0 inválidas)
+
+Cadeia fr2_large_with_loop → fr2_large_no_loop (um processo, o ORB-SLAM3 funde os mapas: 1 mapa e 1 fusão em todas as execuções). ATE da última sequência (m, mediana de 8) e erro médio por quadro, como na Tabela VII da tese.
+
+| Braço | fr2_no_loop sozinha (controle) | Cadeia: ATE da última | Cadeia: erro médio por quadro | Redução do erro médio |
+|---|---|---|---|---|
+| base | 0,548 (erro médio 0,523) | 0,0785 | 0,0721 | −86% |
+| c1 | 0,534 (0,508) | 0,0717 | 0,0646 | −87% |
+| faithful | 0,538 (0,513) | 0,0721 | 0,0637 | −88% |
+| imp | 0,486 (0,462) | 0,1498 | 0,1356 | −71% |
+
+A tese reporta 0,706 → 0,181 m de erro médio (queda de 3,9×). Aqui a queda é de ~7× **mesmo no baseline**: o efeito vem da fusão de mapas do próprio ORB-SLAM3, e não da reconstrução densa. Entre braços não há diferença significativa (todos p bruto > 0,07). Ponto de atenção: na cadeia, o denso melhorado fica ~2× pior que os outros três (0,150 contra 0,072 a 0,079; p=0,23 com n=8); não é significativo, mas é o único resultado onde o braço melhorado aparece pior que o baseline e precisaria de mais execuções.
 
 ## 15. Conclusões consolidadas frente às premissas
 
@@ -406,11 +416,11 @@ Em andamento no momento desta consolidação; os dados ficam em `results_extra/m
 | Tabelas VIII/IX, tamanho das nuvens | −33% a −53% nas cenas grandes (MH03, MH04, MH05), determinista; razão de compressão só comparável em formatos iguais (seção 10) | **Melhorou por construção** |
 | Tabela X, tempo por keyframe | total menor que o da tese em todos os casos, mas a aquisição de profundidade estéreo é muito mais lenta (SGBM contra 1,5 ms); faltam as linhas do ORB-SLAM3 | Misto e parcial |
 | FPS | o denso reduz o FPS em ~7% a 8% contra o baseline (EuRoC MH01), e o melhorado perde um pouco menos que o fiel | **Não melhorou** contra o baseline; custo inerente da thread densa |
-| Tabela VII, mapas encadeados | EuRoC parcial (144 de 288 execuções) e TUM em andamento; o braço fiel com fusão probabilística é muito mais lento | Parcial |
+| Tabela VII, mapas encadeados | EuRoC parcial (144 de 288 execuções); TUM completo: a queda de erro (~7×) ocorre também no baseline, vem da fusão do ORB-SLAM3; o denso melhorado fica ~2× pior que os demais na cadeia TUM (p=0,23, não significativo) | Parcial; **atenção** no braço melhorado |
 
 **Sobre as três premissas.**
 1. *Comparável com a tese:* mesmas sequências e protocolo declarado para cada tabela; o alinhamento e o relógio da tese não são declarados, então comparações numéricas diretas são indicativas.
 2. *Alterações novas:* o ajuste final (C1), o filtro de voxel corrigido e o shutdown sincronizado entram em todos os experimentos; o ganho de ATE vem do C1, e o ganho de tamanho do filtro de voxel.
 3. *Nada pior, melhorar ao menos uma métrica:* há melhora no ATE do EuRoC e no tamanho das nuvens, e **nenhuma piora significativa** em ATE em EuRoC, TUM ou KITTI. Isso **não** significa melhorar todas as métricas: o FPS fica abaixo do baseline (custo inerente da reconstrução densa), a aquisição de profundidade estéreo é mais lenta que a da tese, e no KITTI não há ganho. A afirmação defensável é "melhora precisão e tamanho do mapa onde há margem, sem piora significativa de precisão em nenhum dataset".
 
-**Limites.** Tabela VII incompleta; 4 execuções por KITTI (sem poder para o Holm por sequência); alinhamento da tese desconhecido; execuções do TUM do protocolo antigo não entram aqui; tudo medido em um Ryzen 5 4600G limitado a 2 núcleos, não no notebook da tese.
+**Limites.** Tabela VII incompleta no EuRoC e com sinal de piora não significativa do braço melhorado na cadeia TUM; 4 execuções por KITTI (sem poder para o Holm por sequência); alinhamento da tese desconhecido; execuções do TUM do protocolo antigo não entram aqui; tudo medido em um Ryzen 5 4600G limitado a 2 núcleos, não no notebook da tese.
