@@ -21,6 +21,7 @@
 #define TRACKING_H
 
 #include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/features2d/features2d.hpp>
 
 #include "Viewer.h"
@@ -271,6 +272,10 @@ protected:
     //ORB
     ORBextractor* mpORBextractorLeft, *mpORBextractorRight;
     ORBextractor* mpIniORBextractor;
+
+    // Optional CLAHE preprocessing before ORB extraction (Tracking.clahe)
+    bool mbClahe;
+    cv::Ptr<cv::CLAHE> mpClahe;
 
     //BoW
     ORBVocabulary* mpORBVocabulary;

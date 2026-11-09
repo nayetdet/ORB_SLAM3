@@ -1,0 +1,171 @@
+# Registry of the MULTI-SEQUENCE experiment (Zhang 2023, sec. 3.5, 4.3, Table VII, Fig. 26-27).
+# Use it with run_interleaved.py --registry evaluation/harness/sequences_multi.yaml (evaluation/run_extra.sh does).
+#
+# A "chain" runs several sequences of one scene in ONE process: Examples/Stereo/stereo_euroc and Examples/RGB-D/rgbd_tum
+# accept N sequences and call System::ChangeDataset() between them, so ORB-SLAM3's Atlas must MERGE the per-sequence maps
+# itself, and the dense thread keeps its global cloud across the sequences (so Dense.loadCloud is not needed; with it a prior
+# cloud would be re-seeded at confidence 0.5, here the real confidences are kept). Scoring and the INVALID rule: chain_eval.py.
+#
+# Arms (same meaning as the confirmatory EuRoC run, evaluation/PRE_REGISTRATION_confirmatory.md):
+#   base      stock ORB-SLAM3, syncShutdown 1
+#   c1        base + final global BA (GlobalBA.final)
+#   faithful  the thesis' dense system (online, unbounded queue) + probabilisticMerge 1 (thesis: "turn on for multi-sequence")
+#   imp       faithful + queueLimit 3 + lowPriority + final BA + voxelSafe (+ syncShutdown), probabilisticMerge 1
+# nFeatures: 1000 on EuRoC (T1000 files, thesis sec. 4.2) and TUM (the shipped TUM2.yaml value), as in the single-sequence runs.
+#
+# Chains. The thesis' Table VII: MH01, MH01-02, MH01-03, MH01-04, MH01-05 and V1_01, V1_01-V1_02, V1_01-V1_03, scored on
+# the LAST sequence of the chain; its text compares that with the single-sequence value of Table V. Each column is its own
+# process (a later sequence would refine the earlier poses, and the ATE "at the end of MH_02" is the value of the chain
+# MH01-02 that stops there). The first column of each group (MH01, V101) is a single sequence: it is run by the confirmatory
+# experiment and is not repeated here. The single sequences MH02..MH05, V102, V103 and fr2_noloop below are the CONTROLS: the
+# same arm, same settings (probabilisticMerge included), same session, so "chain vs single" is a paired, interleaved contrast.
+
+roots:
+  euroc: ~/Datasets/EuRoC
+  tum: ~/Datasets/TUM
+
+vocabulary: Vocabulary/ORBvoc.txt
+
+x-euroc: &euroc
+  dataset: euroc
+  sensor: stereo
+  align: se3
+  binary: Examples/Stereo/stereo_euroc
+  timestamps_dir: Examples/Stereo/EuRoC_TimeStamps
+  est_format: orb_euroc
+  gt_format: gt_euroc
+  gt_dir: evaluation/Ground_truth/EuRoC_left_cam   # cam0 frame, as the pure-stereo confirmatory run
+  gt_template: "{gt}"
+  max_diff: 0.02
+
+# chains are scored from the EuRoC-style trajectory (biggest map only, ns); a one-sequence TUM chain from CameraTrajectory.txt
+x-tum: &tum
+  dataset: tum
+  sensor: rgbd
+  align: se3
+  binary: Examples/RGB-D/rgbd_tum
+  associations_dir: Examples/RGB-D/associations
+  est_format: orb_euroc
+  gt_format: gt_tum
+  gt_from_sequence: "groundtruth.txt"
+  max_diff: 0.02
+
+configs:
+  euroc_m_base:
+    <<: *euroc
+    settings: Examples/Stereo/EuRoC_T1000.yaml
+    preflight_expect: ['Features per image: 1000']
+    preflight_forbid: ['\[Dense\] reconstruction enabled']
+    run_expect: ['Shutdown: waited']
+    run_forbid: ['Final global bundle adjustment']
+  euroc_m_c1:
+    <<: *euroc
+    settings: Examples/Stereo/EuRoC_T1000_C1.yaml
+    preflight_expect: ['Features per image: 1000']
+    preflight_forbid: ['\[Dense\] reconstruction enabled']
+    run_expect: ['Shutdown: waited', 'Final global bundle adjustment done']
+  euroc_m_faithful:
+    <<: *euroc
+    settings: Examples/Stereo/EuRoC_Dense_T1000_Multi.yaml
+    preflight_expect: ['Features per image: 1000', '\[Dense\] reconstruction enabled', 'probabilistic merge: on']
+    preflight_forbid: ['extensions\s*:']
+    run_expect: ['Shutdown: waited', 'Dense Reconstruction timing']
+    run_forbid: ['Final global bundle adjustment']
+  euroc_m_imp:
+    <<: *euroc
+    settings: Examples/Stereo/EuRoC_Dense_Imp_T1000_Multi.yaml
+    preflight_expect: ['Features per image: 1000', '\[Dense\] reconstruction enabled', 'probabilistic merge: on', 'queueLimit=3 lowPriority=1', 'voxelSafe=1']
+    run_expect: ['Shutdown: waited', 'Final global bundle adjustment done', 'Dense Reconstruction timing']
+
+  tum_m_base:
+    <<: *tum
+    settings: Examples/RGB-D/TUM2_Sync.yaml
+    preflight_expect: ['Features per image: 1000']
+    preflight_forbid: ['\[Dense\] reconstruction enabled']
+    run_expect: ['Shutdown: waited']
+    run_forbid: ['Final global bundle adjustment']
+  tum_m_c1:
+    <<: *tum
+    settings: Examples/RGB-D/TUM2_Sync_C1.yaml
+    preflight_expect: ['Features per image: 1000']
+    preflight_forbid: ['\[Dense\] reconstruction enabled']
+    run_expect: ['Shutdown: waited', 'Final global bundle adjustment done']
+  tum_m_faithful:
+    <<: *tum
+    settings: Examples/RGB-D/TUM2_Dense_Multi_Sync.yaml
+    preflight_expect: ['Features per image: 1000', '\[Dense\] reconstruction enabled', 'probabilistic merge: on']
+    preflight_forbid: ['extensions\s*:']
+    run_expect: ['Shutdown: waited', 'Dense Reconstruction timing']
+    run_forbid: ['Final global bundle adjustment']
+  tum_m_imp:
+    <<: *tum
+    settings: Examples/RGB-D/TUM2_Dense_Imp_Multi_Sync.yaml
+    preflight_expect: ['Features per image: 1000', '\[Dense\] reconstruction enabled', 'probabilistic merge: on', 'queueLimit=3 lowPriority=1', 'voxelSafe=1']
+    run_expect: ['Shutdown: waited', 'Final global bundle adjustment done', 'Dense Reconstruction timing']
+
+# The single sequences a chain is built from (folder under roots[dataset]; times/assoc/gt as in sequences.yaml).
+elements:
+  euroc:
+    MH01: {folder: MH_01_easy,      times: MH01.txt, gt: MH01_GT.txt}
+    MH02: {folder: MH_02_easy,      times: MH02.txt, gt: MH02_GT.txt}
+    MH03: {folder: MH_03_medium,    times: MH03.txt, gt: MH03_GT.txt}
+    MH04: {folder: MH_04_difficult, times: MH04.txt, gt: MH04_GT.txt}
+    MH05: {folder: MH_05_difficult, times: MH05.txt, gt: MH05_GT.txt}
+    V101: {folder: V1_01_easy,      times: V101.txt, gt: V101_GT.txt}
+    V102: {folder: V1_02_medium,    times: V102.txt, gt: V102_GT.txt}
+    V103: {folder: V1_03_difficult, times: V103.txt, gt: V103_GT.txt}
+  tum:
+    fr2_with_loop: {folder: rgbd_dataset_freiburg2_large_with_loop, assoc: fr2_large_with_loop.txt}
+    fr2_no_loop:   {folder: rgbd_dataset_freiburg2_large_no_loop,   assoc: fr2_large_no_loop.txt}
+
+x-euroc-chains: &euroc_chains
+  MH01-02: {chain: [MH01, MH02]}
+  MH01-03: {chain: [MH01, MH02, MH03]}
+  MH01-04: {chain: [MH01, MH02, MH03, MH04]}
+  MH01-05: {chain: [MH01, MH02, MH03, MH04, MH05]}
+  V101-102: {chain: [V101, V102]}
+  V101-103: {chain: [V101, V102, V103]}
+  # controls: the last sequence of each chain on its own
+  MH02: {chain: [MH02]}
+  MH03: {chain: [MH03]}
+  MH04: {chain: [MH04]}
+  MH05: {chain: [MH05]}
+  V102: {chain: [V102]}
+  V103: {chain: [V103]}
+
+x-tum-chains: &tum_chains
+  fr2_loop-noloop: {chain: [fr2_with_loop, fr2_no_loop]}
+  fr2_noloop: {chain: [fr2_no_loop]}          # control
+
+sequences:
+  euroc_m_base: *euroc_chains
+  euroc_m_c1: *euroc_chains
+  euroc_m_faithful: *euroc_chains
+  euroc_m_imp: *euroc_chains
+  tum_m_base: *tum_chains
+  tum_m_c1: *tum_chains
+  tum_m_faithful: *tum_chains
+  tum_m_imp: *tum_chains
+
+# Published values, context only (different hardware, 3-run averages, parameters the thesis does not give).
+reference:
+  # Table VII, ATE RMSE [m]; the value is that of the LAST sequence of the chain
+  thesis_table_vii:
+    MH01-02: 0.026
+    MH01-03: 0.027
+    MH01-04: 0.091
+    MH01-05: 0.044
+    V101-102: 0.028
+    V101-103: 0.030
+  # Table V (single sequence, proposed system): the same last sequences on their own
+  thesis_table_v_single:
+    MH02: 0.028
+    MH03: 0.032
+    MH04: 0.112
+    MH05: 0.061
+    V102: 0.036
+    V103: 0.107
+  # Sec. 4.3 / Fig. 27, TUM fr2_large_no_loop: AVERAGE ATE PER FRAME [m], single sequence -> after fr2_large_with_loop
+  thesis_tum_mean_error_per_frame:
+    single: 0.706
+    chain: 0.181

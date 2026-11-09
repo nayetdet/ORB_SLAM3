@@ -21,6 +21,8 @@
 #include<fstream>
 #include<iomanip>
 #include<chrono>
+#include<cstdlib>
+#include<cstdio>
 
 #include<opencv2/core/core.hpp>
 
@@ -41,6 +43,11 @@ int main(int argc, char **argv)
     }
 
     const int num_seq = (argc-3)/2;
+
+    // Opt-in: ORB_NO_PACING=1 feeds the frames as fast as the system accepts them instead of sleeping to the
+    // dataset timestamps (unset or any other value: unchanged behaviour). Used to measure throughput (FPS).
+    const char *envNoPacing = getenv("ORB_NO_PACING");
+    const bool bNoPacing = (envNoPacing != NULL && string(envNoPacing) == "1");
     cout << "num_seq = " << num_seq << endl;
     bool bFileName= (((argc-3) % 2) == 1);
     string file_name;
@@ -89,6 +96,12 @@ int main(int argc, char **argv)
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
     ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::STEREO, true);
+
+    if(bNoPacing)
+        cout << "ORB_NO_PACING=1: not sleeping to the dataset timestamps" << endl;
+
+    // Wall-clock (monotonic) time of the whole frame loop (all sequences), image loading and pacing sleeps included.
+    const std::chrono::steady_clock::time_point tLoop0 = std::chrono::steady_clock::now();
 
     cv::Mat imLeft, imRight;
     for (seq = 0; seq<num_seq; seq++)
@@ -153,7 +166,7 @@ int main(int argc, char **argv)
             else if(ni>0)
                 T = tframe-vTimestampsCam[seq][ni-1];
 
-            if(ttrack<T)
+            if(!bNoPacing && ttrack<T)
                 usleep((T-ttrack)*1e6); // 1e6
         }
 
@@ -165,6 +178,16 @@ int main(int argc, char **argv)
         }
 
     }
+
+    // Always printed (paced or not): frames / wall-clock time of the frame loop, Shutdown() excluded.
+    {
+        const double loopSeconds = std::chrono::duration_cast<std::chrono::duration<double> >(std::chrono::steady_clock::now() - tLoop0).count();
+        char line[160];
+        snprintf(line, sizeof(line), "Processed %d frames in %.2f s = %.2f fps", tot_images, loopSeconds,
+                 loopSeconds > 0.0 ? tot_images / loopSeconds : 0.0);
+        cout << line << endl;
+    }
+
     // Stop all threads
     SLAM.Shutdown();
 

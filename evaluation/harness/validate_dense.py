@@ -159,8 +159,9 @@ def main():
               warn_only=True)
 
     if rgb is not None:
-        uniq = len(np.unique(rgb.view(np.void(rgb.dtype.itemsize * 3).__class__)
-                             if False else rgb[:, 0] * 65536 + rgb[:, 1] * 256 + rgb[:, 2]))
+        # NumPy 2 refuses uint8 * 65536 (OverflowError), so widen before combining.
+        rgb32 = rgb.astype(np.uint32)
+        uniq = len(np.unique(rgb32[:, 0] * 65536 + rgb32[:, 1] * 256 + rgb32[:, 2]))
         check("colour channel carries more than one value", uniq > 1,
               "%d distinct colours" % uniq, warn_only=True)
 

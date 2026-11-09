@@ -50,6 +50,39 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
     mnInitialFrameId(0), mbCreatedMap(false), mnFirstFrameId(0), mpCamera2(nullptr), mpLastKeyFrame(static_cast<KeyFrame*>(NULL))
 {
     mpPointCloudMapping = nullptr;
+
+    // Optional CLAHE before ORB extraction, stereo/RGB-D only (default off).
+    // Numeric keys accept both int and real YAML values; invalid values fall back to defaults.
+    mbClahe = false;
+    {
+        cv::FileStorage fsClahe(strSettingPath, cv::FileStorage::READ);
+        if(fsClahe.isOpened())
+        {
+            cv::FileNode n = fsClahe["Tracking.clahe"];
+            if(!n.empty() && n.isInt())
+                mbClahe = (int)n != 0;
+            double clip = 2.0;
+            int tile = 8;
+            n = fsClahe["Tracking.claheClip"];
+            if(!n.empty() && (n.isReal() || n.isInt()))
+                clip = (double)n;
+            n = fsClahe["Tracking.claheTile"];
+            if(!n.empty() && (n.isInt() || n.isReal()))
+                tile = (int)(double)n;
+            if(clip <= 0.0) { cerr << "[Tracking.claheClip] must be > 0, using 2.0" << endl; clip = 2.0; }
+            if(tile <= 0)   { cerr << "[Tracking.claheTile] must be > 0, using 8" << endl; tile = 8; }
+            if(mbClahe && (sensor==System::MONOCULAR || sensor==System::IMU_MONOCULAR))
+            {
+                cerr << "[Tracking.clahe] not implemented for monocular sensors, ignored." << endl;
+                mbClahe = false;
+            }
+            if(mbClahe)
+            {
+                mpClahe = cv::createCLAHE(clip, cv::Size(tile,tile));
+                cout << "CLAHE enabled (clip=" << clip << ", tile=" << tile << ")" << endl;
+            }
+        }
+    }
     // Load camera parameters from settings file
     if(settings){
         newParameterLoader(settings);
@@ -95,6 +128,9 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
             }
         }
     }
+
+    if(sensor==System::STEREO || sensor==System::RGBD || sensor==System::IMU_STEREO || sensor==System::IMU_RGBD)
+        Optimizer::SetAutoDepthReference(mThDepth);
 
     initID = 0; lastID = 0;
     mbInitWith3KFs = false;
@@ -1503,6 +1539,16 @@ Sophus::SE3f Tracking::GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat 
         mImRightDense = imGrayRight;
     }
 
+    if(mbClahe)
+    {
+        // Written to fresh Mats: the dense reconstruction input above keeps the original image.
+        cv::Mat eqLeft, eqRight;
+        mpClahe->apply(mImGray, eqLeft);
+        mpClahe->apply(imGrayRight, eqRight);
+        mImGray = eqLeft;
+        imGrayRight = eqRight;
+    }
+
     //cout << "Incoming frame creation" << endl;
 
     if (mSensor == System::STEREO && !mpCamera2)
@@ -1562,6 +1608,13 @@ Sophus::SE3f Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, co
     {
         mImColorDense = imRGB;
         mImDepthDense = imDepth;
+    }
+
+    if(mbClahe)
+    {
+        cv::Mat eq;
+        mpClahe->apply(mImGray, eq);
+        mImGray = eq;
     }
 
     if (mSensor == System::RGBD)

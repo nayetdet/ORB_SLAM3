@@ -1,0 +1,9 @@
+# Pré-registro da rodada confirmatória (EuRoC) — escrito antes de rodar
+
+Data: 2026-10-01 07:26:41. Manifesto do código congelado (sha256 de src, include, yamls e harness de ~/orb_work2): 2d6403816395fb4c.
+Premissas do trabalho: (1) comparar com a tese de Zhang (2023) de forma comparável, (2) propor alterações novas, (3) seguir as métricas do autor; nada pior, melhorar ao menos uma métrica.
+
+**Desenho.** Braços (todos com System.syncShutdown=1, 1000 features, como a tese): euroc_p_base (baseline), euroc_p_c1 (baseline + ajuste global final), euroc_p_faithful (denso fiel à tese), euroc_p_imp (queueLimit 3, lowPriority, ajuste final, voxelSafe). Sequências: MH01,MH02,MH03,MH04,MH05,V101,V102,V103. 12 execuções por braço e sequência (múltiplo de 4: posições balanceadas), entrelaçadas por quadrados latinos com semente 11. CPU limitada a 2 núcleos físicos / 4 threads (cpuset 0,6,1,7), docker com --ulimit nice=40:40, máquina parada.
+**Métrica primária:** ATE RMSE (SE(3), trajetória de quadros), mediana de 12; secundárias: ATE com Sim(3) e keyframes (comparação com a tese), tamanho da nuvem, tempo de parede, tempo médio de tracking.
+**Critérios (fixados agora).** Superioridade: p<0,05 do teste de permutação sobre a diferença de medianas, com correção de Holm sobre as 24 comparações (3 braços x 8 sequências). Não-inferioridade: limite superior do IC95% bootstrap da razão de medianas ≤ 1,10 (esse critério é pouco específico com n=12; será reportado junto com a razão). Atribuição do ganho: euroc_p_imp contra euroc_p_c1 isola o efeito do desacoplamento; euroc_p_c1 contra euroc_p_base isola o ajuste final.
+**Regras.** O resultado é reportado como sair; não há reexecução até passar nem ajuste de parâmetros durante a rodada. O re-teste do V103 (3 braços, 12 execuções) é informativo e não altera este desenho.

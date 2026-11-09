@@ -51,6 +51,9 @@ def load_registry(path=None):
 
 def build_invocation(cfg_name, cfg, seq_name, seq, reg, run_tag):
     """Return (argv, output_map) where output_map maps kind -> filename in cwd."""
+    if isinstance(seq, dict) and "chain" in seq:  # several sequences in one process (sequences_multi.yaml)
+        import chain_eval
+        return chain_eval.build_invocation(cfg, seq, reg, run_tag)
     vocab = rpath(reg["vocabulary"])
     root = rpath(reg["roots"][cfg["dataset"]])
     seq_dir = os.path.join(root, seq["folder"])
@@ -74,6 +77,9 @@ def build_invocation(cfg_name, cfg, seq_name, seq, reg, run_tag):
 
 
 def resolve_gt(cfg, seq, seq_dir, reg):
+    if isinstance(seq, dict) and "chain" in seq:
+        import chain_eval
+        return chain_eval.gt_file(cfg, seq, reg)
     if "gt_from_sequence" in cfg:
         return os.path.join(seq_dir, cfg["gt_from_sequence"])
     root = rpath(reg["roots"][cfg["dataset"]])
@@ -97,6 +103,30 @@ def run_one(argv, cwd, log_path, timeout):
             log.write("\n*** could not execute: %s ***\n" % exc)
             rc = -1
     return rc, time.time() - t0
+
+
+DENSE_ARTIFACTS = (".pcd", ".ot", ".bt")
+
+
+def prune_dense(work):
+    """Delete the large dense-map outputs of one run (trajectories and logs stay)."""
+    freed = 0
+    for name in os.listdir(work):
+        if name.endswith(DENSE_ARTIFACTS):
+            path = os.path.join(work, name)
+            freed += os.path.getsize(path)
+            os.remove(path)
+    return freed
+
+
+def write_report(report, out_dir):
+    json_path = os.path.join(out_dir, "results.json")
+    with open(json_path, "w") as fh:
+        json.dump(report, fh, indent=2)
+    md = render_table(report, reg=None)
+    with open(os.path.join(out_dir, "results.md"), "w") as fh:
+        fh.write(md)
+    return json_path
 
 
 def benchmark(args):
@@ -163,6 +193,8 @@ def benchmark(args):
             log_path = os.path.join(work, "slam.log")
             print("  %s %s ... " % (seq_name, run_tag), end="", flush=True)
             rc, elapsed = run_one(argv_i, work, log_path, args.timeout)
+            if args.prune_dense and i > 0:
+                prune_dense(work)  # run00 keeps its cloud for validate_dense.py
 
             src = os.path.join(work, outputs_i[args.trajectory])
             entry = {"run": run_tag, "returncode": rc, "seconds": round(elapsed, 1),
@@ -209,6 +241,8 @@ def benchmark(args):
             seq_report["r_rel_deg_per_100m"] = metrics.aggregate(
                 [r.get("r_rel_deg_per_100m") for r in runs])
         report["sequences"][seq_name] = seq_report
+        if not args.dry_run:
+            write_report(report, out_dir)  # partial results survive a crash
 
     if missing:
         print("\nMissing inputs:")
@@ -336,6 +370,9 @@ def main():
     p.add_argument("--out", default="evaluation/results")
     p.add_argument("--timeout", type=int, default=3600, help="per-run timeout in seconds")
     p.add_argument("--registry", help="alternative sequences.yaml")
+    p.add_argument("--prune-dense", action="store_true",
+                   help="delete .pcd/.ot/.bt after every run except run00 (saves disk on "
+                        "long dense benchmarks)")
     p.add_argument("--dry-run", action="store_true",
                    help="print commands and check every input path, run nothing")
     p.add_argument("--compare", nargs="+", metavar="RESULT_DIR",

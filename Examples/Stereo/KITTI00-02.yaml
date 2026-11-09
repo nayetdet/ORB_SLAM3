@@ -57,7 +57,7 @@ Viewer.PointSize: 2.0
 Viewer.CameraSize: 0.7
 Viewer.CameraLineWidth: 3.0
 Viewer.ViewpointX: 0.0
-Viewer.ViewpointY: -100
+Viewer.ViewpointY: -100.0
 Viewer.ViewpointZ: -0.1
 Viewer.ViewpointF: 2000.0
 
@@ -110,3 +110,10 @@ Dense.roiMarginY: 0
 # is preferable when merging several sequences of the same scene.
 Dense.colorizeByDepth: 1
 Dense.solidColor: [200, 200, 200]
+
+#--------------------------------------------------------------------------------------------
+# System.UseViewer: 0 disables the Pangolin window. Required on a headless machine,
+# and it should be 0 for accuracy benchmarks anyway -- the viewer competes for CPU
+# with Local BA, which changes the ATE.
+#--------------------------------------------------------------------------------------------
+System.UseViewer: 0

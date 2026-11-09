@@ -21,7 +21,9 @@
 #include "System.h"
 #include "Converter.h"
 #include "PointCloudMapping.h"
+#include "Optimizer.h"
 #include <thread>
+#include <chrono>
 #include <pangolin/pangolin.h>
 #include <iomanip>
 #include <openssl/md5.h>
@@ -107,6 +109,67 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     }
 
     mStrVocabularyFilePath = strVocFile;
+
+    // Optional final global BA before saving trajectories (default off).
+    mbFinalGlobalBA = false;
+    node = fsSettings["GlobalBA.final"];
+    if(!node.empty() && node.isInt())
+        mbFinalGlobalBA = (int)node != 0;
+
+    // Optional synchronised shutdown (default off): Shutdown() waits for LocalMapping,
+    // LoopClosing and a running GBA before anything is saved, in every configuration, so
+    // a loop correction still in flight when the sequence ends is part of the saved
+    // trajectory. Off keeps the upstream non-waiting shutdown. Read from fsSettings like
+    // GlobalBA.final, so it works for old and File.version 1.0 settings alike.
+    mbSyncShutdown = false;
+    node = fsSettings["System.syncShutdown"];
+    if(!node.empty())
+    {
+        if(node.isInt())
+            mbSyncShutdown = (int)node != 0;
+        else
+            cerr << "[System.syncShutdown] must be an integer (0 or 1), using default 0" << endl;
+    }
+
+    // Optional depth-dependent information matrix for stereo/RGB-D edges (default off).
+    // w = clamp((refDepth/z)^4, minWeight, maxWeight); refDepth<=0 -> the sensor's
+    // close/far threshold. Numeric keys accept int or real. State is static, i.e.
+    // shared by all System instances in the process (last one constructed wins).
+    {
+        bool bDW = false;
+        float refDepth = 0.0f, minW = 0.1f, maxW = 1.0f;
+        auto readNum = [&](const char* key, float &out, bool positive)
+        {
+            cv::FileNode n = fsSettings[key];
+            if(n.empty() || !(n.isReal() || n.isInt()))
+                return;
+            const float v = (float)(double)n;
+            if(positive && v <= 0.0f)
+                cerr << "[" << key << "] must be > 0 (got " << v << "), using default " << out << endl;
+            else
+                out = v;
+        };
+        node = fsSettings["Optimizer.depthWeighting"];
+        if(!node.empty() && node.isInt())
+            bDW = (int)node != 0;
+        node = fsSettings["Optimizer.depthRefDepth"];
+        if(!node.empty() && (node.isReal() || node.isInt()))
+            refDepth = (float)(double)node;   // <=0 means auto
+        readNum("Optimizer.depthMinWeight", minW, true);
+        readNum("Optimizer.depthMaxWeight", maxW, true);
+        if(maxW < minW) { cerr << "[Optimizer.depthMaxWeight] < minWeight, using minWeight" << endl; maxW = minW; }
+        Optimizer::SetDepthWeighting(bDW, refDepth, minW, maxW);
+        if(bDW)
+        {
+            cout << "Optimizer depth weighting ON (refDepth=" << (refDepth>0 ? to_string(refDepth)+" m" : string("auto"))
+                 << ", minWeight=" << minW << ", maxWeight=" << maxW << ")" << endl;
+            if(mSensor==IMU_STEREO || mSensor==IMU_RGBD)
+                cerr << "[Optimizer.depthWeighting] WARNING: inertial stereo edges are NOT weighted; "
+                        "only pose optimisation and visual-only BA are." << endl;
+            if(mSensor==MONOCULAR || mSensor==IMU_MONOCULAR)
+                cerr << "[Optimizer.depthWeighting] has no effect for monocular sensors." << endl;
+        }
+    }
 
     bool loadedAtlas = false;
 
@@ -575,13 +638,88 @@ void System::Shutdown()
         /*usleep(5000);
     }*/
 
+    // Anything that needs FINAL keyframe poses (final global BA, dense rebuild with
+    // final poses) must not overlap LocalMapping / LoopClosing / a running GBA, or it
+    // would read poses mid-update. Default runs (both off) keep the original
+    // non-waiting shutdown. System.syncShutdown asks for the same wait in every
+    // configuration, so that all the arms of a comparison save a settled trajectory.
+    // The wait covers work in flight (a loop correction, a GBA). Keyframes still queued
+    // for LocalMapping / LoopClosing are not drained: each thread finishes the iteration
+    // it is in and stops.
+    const bool bNeedFinalPoses = mbFinalGlobalBA ||
+        (mpPointCloudMapping && mpPointCloudMapping->NeedsFinalPoses());
+    if(bNeedFinalPoses || mbSyncShutdown)
+    {
+        // Monotonic clock: the wait is reported, so wall-clock steps must not move it.
+        const std::chrono::steady_clock::time_point tWait0 = std::chrono::steady_clock::now();
+        auto waited = [&]()
+        {
+            return std::chrono::duration<double>(std::chrono::steady_clock::now() - tWait0).count();
+        };
+        // Bounded only when System.syncShutdown is on, so that opting in can never hang a
+        // run: isRunningGBA() can stay true for good when a superseded GBA returns early
+        // without clearing it (LoopClosing::RunGlobalBundleAdjustment) and no new one is
+        // launched. Without the key the wait is unbounded, as it always was.
+        const double maxWaitS = 1800.0;
+        while(!mpLocalMapper->isFinished() || !mpLoopCloser->isFinished() || mpLoopCloser->isRunningGBA())
+        {
+            if(mbSyncShutdown && waited() > maxWaitS)
+            {
+                // Ask like the loop condition does: isRunningGBA() takes mMutexGBA, which a
+                // GBA waiting for LocalMapping holds, so only once both have finished.
+                const bool bLMDone = mpLocalMapper->isFinished(), bLCDone = mpLoopCloser->isFinished();
+                cerr << "[System.syncShutdown] WARNING: gave up waiting after " << maxWaitS
+                     << " s (LocalMapping finished=" << bLMDone << ", LoopClosing finished=" << bLCDone;
+                if(bLMDone && bLCDone)
+                    cerr << ", GBA running=" << mpLoopCloser->isRunningGBA();
+                cerr << "); continuing, the poses saved from here on may still be changing." << endl;
+                break;
+            }
+            usleep(5000);
+        }
+        char sWait[32];
+        snprintf(sWait, sizeof(sWait), "%.2f", waited());
+        cout << "Shutdown: waited " << sWait << " s for LocalMapping/LoopClosing/GBA" << endl;
+    }
+
+    // Drain the dense thread BEFORE the final GBA rewrites poses: it then sees a
+    // deterministic (pre-GBA) state and does not compete with the GBA for CPU.
+    // Final-pose modes re-read the poses in FinalizeOffline()/Save() below.
     if(mpPointCloudMapping)
     {
-        // Drain the queue before saving: keyframes still pending would otherwise
-        // be missing from the dense map.
         mpPointCloudMapping->RequestFinish();
         while(!mpPointCloudMapping->IsFinished())
             usleep(5000);
+    }
+
+    if(mbFinalGlobalBA)
+    {
+        // Non-robust like LoopClosing's own GBA call (LoopClosing.cc), 20 iterations.
+        vector<Map*> vpMaps = mpAtlas->GetAllMaps();
+        int nDone = 0;
+        for(Map* pMap : vpMaps)
+        {
+            if(!pMap || pMap->IsBad() || pMap->KeyFramesInMap() <= 1 || !pMap->GetOriginKF())
+                continue;
+            cout << "Final global bundle adjustment on map " << pMap->GetId() << " ..." << endl;
+            if(pMap->isImuInitialized())
+                Optimizer::FullInertialBA(pMap, 7, false, 0, nullptr);
+            else
+                Optimizer::GlobalBundleAdjustemnt(pMap, 20, nullptr, pMap->GetOriginKF()->mnId, false);
+            ++nDone;
+        }
+        if(nDone > 0)
+            cout << "Final global bundle adjustment done (" << nDone << " map(s))" << endl;
+        else
+            cerr << "[GlobalBA.final] no usable map, skipping final global BA." << endl;
+    }
+
+    if(mpPointCloudMapping)
+    {
+        // Runs after the backend and the final GBA: it reads the final poses. It is
+        // part of Shutdown() wall-clock, but SLAM is already finished, so it cannot
+        // perturb the trajectory (save the trajectory after Shutdown as usual).
+        mpPointCloudMapping->FinalizeOffline();
         mpPointCloudMapping->Save();
         mpPointCloudMapping->PrintTimingSummary();
     }

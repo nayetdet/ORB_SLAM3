@@ -21,6 +21,8 @@
 #include<fstream>
 #include<iomanip>
 #include<chrono>
+#include<cstdlib>
+#include<cstdio>
 
 #include<opencv2/core/core.hpp>
 
@@ -45,6 +47,11 @@ int main(int argc, char **argv)
     vector<double> vTimestamps;
     LoadImages(string(argv[3]), vstrImageLeft, vstrImageRight, vTimestamps);
 
+    // Opt-in: ORB_NO_PACING=1 feeds the frames as fast as the system accepts them instead of sleeping to the
+    // dataset timestamps (unset or any other value: unchanged behaviour). Used to measure throughput (FPS).
+    const char *envNoPacing = getenv("ORB_NO_PACING");
+    const bool bNoPacing = (envNoPacing != NULL && string(envNoPacing) == "1");
+
     const int nImages = vstrImageLeft.size();
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
@@ -61,6 +68,12 @@ int main(int argc, char **argv)
 
     double t_track = 0.f;
     double t_resize = 0.f;
+
+    if(bNoPacing)
+        cout << "ORB_NO_PACING=1: not sleeping to the dataset timestamps" << endl;
+
+    // Wall-clock (monotonic) time of the whole frame loop, image loading and pacing sleeps included.
+    const std::chrono::steady_clock::time_point tLoop0 = std::chrono::steady_clock::now();
 
     // Main loop
     cv::Mat imLeft, imRight;
@@ -133,8 +146,17 @@ int main(int argc, char **argv)
         else if(ni>0)
             T = tframe-vTimestamps[ni-1];
 
-        if(ttrack<T)
+        if(!bNoPacing && ttrack<T)
             usleep((T-ttrack)*1e6);
+    }
+
+    // Always printed (paced or not): frames / wall-clock time of the frame loop, Shutdown() excluded.
+    {
+        const double loopSeconds = std::chrono::duration_cast<std::chrono::duration<double> >(std::chrono::steady_clock::now() - tLoop0).count();
+        char line[160];
+        snprintf(line, sizeof(line), "Processed %d frames in %.2f s = %.2f fps", nImages, loopSeconds,
+                 loopSeconds > 0.0 ? nImages / loopSeconds : 0.0);
+        cout << line << endl;
     }
 
     // Stop all threads
