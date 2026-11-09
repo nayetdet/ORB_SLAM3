@@ -110,3 +110,7 @@ evaluation/results/
 *.pcd
 *.ot
 *.bt
+
+# Local editor and assistant configuration
+.claude/
+.vscode/
